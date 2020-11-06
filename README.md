@@ -14,3 +14,12 @@
 9.  engine获取response给pipeline
 10. pipeline 调用process处理response
 11. pipeline 生成item，存入数据
+
+
+## 存储结果
+key: value 
+包含以下字段
+url 
+source 
+source_ch
+request id
