@@ -2,7 +2,6 @@ package spider
 
 import (
 	"log"
-	"og/job"
 	req "og/reqeuest"
 	"time"
 )
@@ -17,10 +16,8 @@ func New(scheduler chan *req.Request) *Spider {
 	}
 }
 
-func ReadDB() []*job.Job {
-	return []*job.Job{
-		job.New(),
-	}
+func ReadDB() []*req.Request {
+	return []*req.Request{req.New("")}
 }
 
 func (s *Spider) Run() {
