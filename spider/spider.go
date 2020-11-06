@@ -4,6 +4,7 @@ import (
 	"log"
 	"og/job"
 	req "og/reqeuest"
+	"time"
 )
 
 type Spider struct {
@@ -26,5 +27,9 @@ func (s *Spider) Run() {
 	log.Println("1. 读取数据库job")
 	log.Println("2. 解析job为request")
 	log.Println("3. request存入engine")
-	s.scheduler <- req.New("")
+	for {
+		s.scheduler <- req.New("")
+		time.Sleep(time.Second * 2)
+	}
+
 }

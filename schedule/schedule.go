@@ -3,6 +3,7 @@ package schedule
 import (
 	"log"
 	req "og/reqeuest"
+	"time"
 )
 
 type Schedule struct {
@@ -13,8 +14,8 @@ type Schedule struct {
 }
 
 func (s *Schedule) Process(req *req.Request) {
-	s.manager = append(s.manager, req)
-	log.Println("[schedule] msg: add, req: Request")
+	// s.manager = append(s.manager, req)
+	log.Println("[schedule] scheduler process ")
 }
 
 func New(downloader chan *req.Request) *Schedule {
@@ -27,7 +28,8 @@ func New(downloader chan *req.Request) *Schedule {
 
 func (s *Schedule) Run() {
 	for {
-		// time.Sleep(3 * time.Second)
+		s.downloader <- &req.Request{}
+		time.Sleep(2 * time.Second)
 		// if len(s.manager) > 0 {
 		// 	s.downloader <- s.manager[0]
 		// 	time.Sleep(3 * time.Second)

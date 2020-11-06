@@ -36,7 +36,7 @@ func (e *Engine) Run() {
 	Schedule := schedule.New(e.downloader)
 	go Schedule.Run()
 
-	Download := download.New(e.scheduler, e.pipeliner)
+	Download := download.New(e.pipeliner)
 	Download.Run()
 
 	for {
@@ -47,7 +47,7 @@ func (e *Engine) Run() {
 			Download.Process(req)
 		case resp := <-e.pipeliner:
 			pipeline.Process(resp)
-		default:
+			// default:
 			// time.Sleep(3 * time.Second)
 			// log.Println("engine process")
 		}
