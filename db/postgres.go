@@ -1,7 +1,11 @@
 package db
 
 import (
+	"fmt"
 	req "og/reqeuest"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/go-pg/pg/v10"
 )
@@ -47,4 +51,16 @@ func (self *PgSQL) Select(i int) []*req.Request {
 	var requests []*req.Request
 	self.Conn.Model(&requests).Limit(i).Select()
 	return requests
+}
+
+func (self *PgSQL) Close() {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("close database")
+		fmt.Println("close engine")
+		self.Conn.Close()
+		os.Exit(0)
+	}()
 }

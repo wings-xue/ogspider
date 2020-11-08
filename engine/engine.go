@@ -33,6 +33,7 @@ func (e *Engine) PushReq(r *req.Request) {
 func (e *Engine) Run() {
 	// 初始化数据库
 	database := db.New()
+	database.Close()
 
 	// 初始化spider
 	Spider := spider.New(e.scheduler, database)
