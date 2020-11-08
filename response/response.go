@@ -1,3 +1,7 @@
 package response
 
-type Response struct{}
+import req "og/reqeuest"
+
+type Response struct {
+	request *req.Request
+}

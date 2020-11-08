@@ -1,27 +1,38 @@
 package spider
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"og/item"
 	req "og/reqeuest"
+	"strconv"
 )
 
-const StartURL = "start_url"
+const (
+	StartURL = "start_url"
+	Host     = "host"
+	Download = "download"
+)
 
 func Zhaotoubiao() []*item.Field {
 
 	ListURL := `https:\/\/www.chinabidding.cn\/search\/searchzbw\/search2\?areaid=\d+&keywords=&page=\d+&categoryid=&rp=22&table_type=0&b_date=`
 	DetailURL := `www.chinabidding.cn/.*?/.*?.html`
-
+	StartURL := []string{
+		"https://www.chinabidding.cn/search/searchzbw/search2?areaid=17&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
+		"https://www.chinabidding.cn/search/searchzbw/search2?areaid=18&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
+	}
+	for i := 0; i < 1000; i++ {
+		s := strconv.Itoa(i)
+		StartURL = append(StartURL, StartURL[0]+s)
+	}
 	var Field = []*item.Field{
 		{
-			Name: "start_url",
-			StartURL: []string{
-				"https://www.chinabidding.cn/search/searchzbw/search2?areaid=17&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
-				"https://www.chinabidding.cn/search/searchzbw/search2?areaid=18&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
-			},
+			Name:     "start_url",
+			StartURL: StartURL,
 		},
 		{
-			Name:   "source_url",
+			Name:   "host",
 			Value:  "https://www.chinabidding.cn/cgxx/",
 			UrlReg: ListURL,
 		},
@@ -101,7 +112,13 @@ func FindKey(key string, field []*item.Field) *item.Field {
 			return f
 		}
 	}
-	return nil
+	return &item.Field{}
+}
+
+func HashK(s string) string {
+	hash := md5.Sum([]byte(s))
+	return hex.EncodeToString(hash[:])
+
 }
 
 func ToSpider(item []*item.Field) []*req.Request {
@@ -109,6 +126,11 @@ func ToSpider(item []*item.Field) []*req.Request {
 	for _, url := range FindKey(StartURL, item).StartURL {
 		startReq := req.New(url)
 		startReq.Datas = item
+		startReq.Host = FindKey(Host, item).Value
+		startReq.Status = req.StatusWait
+		startReq.UUID = HashK(url)
+		startReq.Download = FindKey(Download, item).Value
+		startReq.Retry = 1
 		request = append(request, startReq)
 	}
 	return request
