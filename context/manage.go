@@ -33,12 +33,12 @@ func (self *Manager) Pop() *req.Request {
 
 func (self *Manager) Len() int {
 	self.mu.Lock()
-	self.mu.Unlock()
+	defer self.mu.Unlock()
 	return len(self.Queue)
 }
 
 func (self *Manager) Free() {
 	self.mu.Lock()
-	self.mu.Unlock()
+	defer self.mu.Unlock()
 	self.Queue = self.Queue[:0]
 }

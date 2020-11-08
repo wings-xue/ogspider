@@ -3,7 +3,7 @@ package db
 import (
 	req "og/reqeuest"
 
-	"github.com/go-pg/pg"
+	"github.com/go-pg/pg/v10"
 )
 
 type PgSQL struct {
@@ -16,7 +16,6 @@ func New() *PgSQL {
 	if err != nil {
 		panic(err)
 	}
-
 	db := pg.Connect(opt)
 	return &PgSQL{
 		Conn: db,
@@ -28,14 +27,19 @@ func New() *PgSQL {
 // upser == false, 存在丢弃，不存在插入
 func (self *PgSQL) Update(r *req.Request, upsert bool) {
 	if upsert {
-		self.Conn.Model(r).OnConflict("(uuid) DO UPDATE").
-			Set("Download=EXCLUDD.Download").
-			Set("Datas=EXCLUDD.Datas").
-			Set("Status=EXCLUDD.Status").
-			Set("Retry=EXCLUDD.Retry").
+		self.Conn.Model(r).
+			OnConflict("(uuid) DO UPDATE").
+			Set("download=EXCLUDED.download").
+			Set("datas=EXCLUDED.datas").
+			Set("status=EXCLUDED.status").
+			Set("retry=EXCLUDED.retry").
 			Insert()
+		// fmt.Println(rst)
+		// fmt.Println(err)
 	} else {
 		self.Conn.Model(r).OnConflict("DO NOTHING").SelectOrInsert()
+		// fmt.Println(rst)
+		// fmt.Println(err)
 	}
 }
 

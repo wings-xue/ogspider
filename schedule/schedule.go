@@ -20,7 +20,7 @@ func (self *Schedule) Process(req *req.Request) {
 	if !self.filter.Contains(req.URL) {
 		self.manager.Push(req)
 	}
-	log.Printf("scheduler have request count is: %d", self.manager.Len())
+	log.Printf("[scheduler] queue have request count is: %d", self.manager.Len())
 }
 
 func New(downloader chan *req.Request) *Schedule {
@@ -37,11 +37,7 @@ func (self *Schedule) Run() {
 	for {
 		if self.manager.Len() > 0 {
 			req := self.manager.Pop()
-			// fmt.Print(req)
-
 			self.downloader <- req
-		} else {
-			// time.Sleep(1 * time.Second)
 		}
 	}
 }
