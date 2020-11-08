@@ -23,6 +23,14 @@ func (self *Manager) Push(req *req.Request) {
 	self.Queue = append(self.Queue, req)
 }
 
+func (self *Manager) Pop() *req.Request {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	r := self.Queue[0]
+	self.Queue = self.Queue[1:]
+	return r
+}
+
 func (self *Manager) Len() int {
 	self.mu.Lock()
 	self.mu.Unlock()
