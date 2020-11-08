@@ -1,6 +1,6 @@
-package context
+package item
 
-type Item struct {
+type Field struct {
 	// 提取字段名称
 	Name string
 	// 直接赋值,可选
@@ -19,4 +19,9 @@ type Item struct {
 	Log string
 	// 激活处理的正则表达式
 	UrlReg string
+	// 入口URL
+	StartURL []string
+	// 指明下载器
+	// 默认rod
+	Download string
 }
