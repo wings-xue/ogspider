@@ -6,14 +6,17 @@ import (
 	req "og/reqeuest"
 	"og/response"
 	"sync"
+	"time"
 )
 
 func (self *Download) Process(r *req.Request) *response.Response {
-	self.mu.Lock()
-	defer self.mu.Unlock()
+
+	// self.mu.Lock()
+	// defer self.mu.Unlock()
 	log.Printf("[downloader] download process, %d", self.manager.Len())
 	self.manager.Push(r)
 	if self.manager.Len() >= self.Size {
+
 		queue := self.manager.Queue
 		self.manager.Free()
 		for _, request := range queue {
@@ -48,6 +51,7 @@ func (self *Download) Run() {
 
 func (self *Download) download(r *req.Request) response.Response {
 	defer self.wg.Done()
+	time.Sleep(time.Second * 5)
 	log.Println("download正在请求数据....")
 	return response.Response{}
 }
