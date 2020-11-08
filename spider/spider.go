@@ -3,7 +3,7 @@ package spider
 import (
 	"log"
 	req "og/reqeuest"
-	"time"
+	"strconv"
 )
 
 type Spider struct {
@@ -24,9 +24,13 @@ func (s *Spider) Run() {
 	log.Println("1. 读取数据库job")
 	log.Println("2. 解析job为request")
 	log.Println("3. request存入engine")
+
+	i := 0
 	for {
-		s.scheduler <- req.New("")
-		time.Sleep(time.Second * 2)
+		i++
+		url := strconv.Itoa(i)
+		s.scheduler <- req.New(url)
+		// time.Sleep(time.Second * 2)
 	}
 
 }
