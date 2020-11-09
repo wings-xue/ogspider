@@ -45,7 +45,7 @@ func (e *Engine) Run() {
 
 	Download := download.New(e.pipeliner)
 
-	Pipeline := pipeline.New(e.scheduler)
+	Pipeline := pipeline.New(e.scheduler, database)
 	for {
 		select {
 		case req := <-e.scheduler:

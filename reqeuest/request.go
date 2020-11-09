@@ -1,6 +1,9 @@
 package req
 
-import "og/item"
+import (
+	"og/item"
+	"og/setting"
+)
 
 const (
 	StatusWait  = "waitting"
@@ -36,14 +39,17 @@ func ToCrawlerRst(request *Request) map[string]interface{} {
 	for _, item := range request.Datas {
 		rst[item.Name] = rst[item.Value]
 	}
+	rst[setting.CrawlerRstKey] = request.UUID
 	return rst
 }
 
 func ToTableSchema(tablename string, request *Request) string {
+
 	column := ""
 	for _, item := range request.Datas {
-		column += item.Name + " text\n"
+		column += item.Name + " text,\n"
 	}
-	return "create table if not exists " + tablename + "(" + column + ");"
+	column += setting.CrawlerRstKey + " text,\n"
+	return "create table if not exists " + tablename + "(" + column + " UNIQUE(req_id)) ;"
 
 }

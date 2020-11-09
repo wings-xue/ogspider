@@ -47,6 +47,10 @@ func (self *PgSQL) Update(r *req.Request, upsert bool) {
 	}
 }
 
+func (self *PgSQL) Insert(map[string]interface{}) {
+
+}
+
 func (self *PgSQL) Select(i int) []*req.Request {
 	var requests []*req.Request
 	self.Conn.Model(&requests).Limit(i).Select()

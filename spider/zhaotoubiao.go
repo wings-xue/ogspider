@@ -102,6 +102,10 @@ func Zhaotoubiao() []*item.Field {
 			Attr:   "innerHTML",
 			UrlReg: DetailURL,
 		},
+		{
+			Name:  "table_name",
+			Value: "zhaotoubiao",
+		},
 	}
 	return Field
 }

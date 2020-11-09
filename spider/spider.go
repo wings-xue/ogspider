@@ -4,6 +4,7 @@ import (
 	"log"
 	"og/db"
 	req "og/reqeuest"
+	"og/setting"
 )
 
 type Spider struct {
@@ -28,14 +29,20 @@ func ReadDB() []*req.Request {
 }
 
 func (s *Spider) CreateTable(r *req.Request, db *db.PgSQL) {
-	db.Conn.Exec(req.ToTableSchema("zhaotoubiao", r))
+	tablename := FindKey(setting.TableName, Zhaotoubiao()).Value
+	_, err := db.Conn.Exec(req.ToTableSchema(tablename, r))
+	if err != nil {
+		panic(err)
+	}
+
 }
 
 func (s *Spider) Run() {
 	request := ReadMemory()
 	log.Printf("[spider] init spider :%d", len(request))
+	pgsql := db.New()
 	for _, r := range request {
-		pgsql := db.New()
+
 		pgsql.Update(r, true)
 		s.CreateTable(r, pgsql)
 		s.scheduler <- r
