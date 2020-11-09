@@ -2,38 +2,68 @@ package schedule
 
 import (
 	"log"
+	"og/context"
+	"og/filter"
 	req "og/reqeuest"
-	"time"
+	"sync"
 )
 
 type Schedule struct {
-	manager []*req.Request
-
+	manager *context.Manager
+	WorkNum int
 	// Schedule将request传入engine,后续engine获取对象，给pipeline
 	downloader chan *req.Request
+	filter     *filter.Bloom
+	mu         sync.Mutex
 }
 
-func (s *Schedule) Process(req *req.Request) {
+func (self *Schedule) Minus() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.WorkNum--
+}
+
+func (self *Schedule) Inc() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.WorkNum++
+}
+
+func (self *Schedule) Len() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	return self.WorkNum
+}
+
+func (self *Schedule) Process(req *req.Request) {
 	// s.manager = append(s.manager, req)
-	log.Println("[schedule] scheduler process ")
+	if !self.filter.Contains(req.URL) {
+		self.manager.Push(req)
+	}
+	if req.Seed {
+		self.Minus()
+	}
+	log.Printf("[scheduler] queue request: %d, worker: %d", self.manager.Len(), self.Len())
 }
 
 func New(downloader chan *req.Request) *Schedule {
-	manager := make([]*req.Request, 0)
+	manager := context.New()
+	filter := filter.New(filter.BLOOMSIZE)
 	return &Schedule{
 		downloader: downloader,
 		manager:    manager,
+		filter:     filter,
 	}
 }
 
-func (s *Schedule) Run() {
+func (self *Schedule) Run() {
 	for {
-		s.downloader <- &req.Request{}
-		time.Sleep(2 * time.Second)
-		// if len(s.manager) > 0 {
-		// 	s.downloader <- s.manager[0]
-		// 	time.Sleep(3 * time.Second)
-		// }
 
+		if self.manager.Len() > 0 && self.Len() < 20 {
+			self.Inc()
+			req := self.manager.Pop()
+			req.Seed = true
+			self.downloader <- req
+		}
 	}
 }

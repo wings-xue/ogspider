@@ -23,3 +23,8 @@ url
 source 
 source_ch
 request id
+pgsql install
+ docker run --name ogpostgres -d -p 5432:5432 -e POSTGRES_PASSWORD= postgres
+
+
+docker run -d -p 5433:80 --name pgadmin4 -e PGADMIN_DEFAULT_EMAIL=qq号码@qq.com -e PGADMIN_DEFAULT_PASSWORD=密码 dpage/pgadmin4
