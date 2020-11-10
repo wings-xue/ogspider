@@ -53,7 +53,7 @@ func (e *Engine) Run() {
 		case req := <-e.downloader:
 			go Download.Process(req)
 		case resp := <-e.pipeliner:
-			Pipeline.Process(resp)
+			go Pipeline.Process(resp)
 			// default:
 			// time.Sleep(3 * time.Second)
 			// log.Println("engine process")

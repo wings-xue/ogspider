@@ -9,7 +9,7 @@ import (
 )
 
 func (self *Download) Process(r *req.Request) {
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*11)
+	ctx, _ := context.WithTimeout(context.Background(), time.Second)
 	done := make(chan *response.Response)
 	go func() {
 		done <- self.download(ctx, r)
@@ -37,7 +37,7 @@ func (self *Download) download(ctx context.Context, r *req.Request) *response.Re
 	resp := response.New(r)
 
 	log.Printf("[Download] fetcher url: %s\n", r.URL)
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 3)
 	resp.StatusCode = 200
 	return resp
 

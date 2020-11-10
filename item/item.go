@@ -1,5 +1,9 @@
 package item
 
+import (
+	"reflect"
+)
+
 type Field struct {
 	// 提取字段名称
 	Name string
@@ -24,4 +28,15 @@ type Field struct {
 	// 指明下载器
 	// 默认rod
 	Download string
+}
+
+func HasValue(name string, model Field) bool {
+	value := reflect.ValueOf(model).FieldByName(name)
+	return value.String() == ""
+}
+
+// 过滤
+func Filter(attr string, field []*Field) []*Field {
+
+	return []*Field{}
 }

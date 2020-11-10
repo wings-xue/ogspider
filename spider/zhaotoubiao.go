@@ -125,7 +125,7 @@ func HashK(s string) string {
 
 }
 
-func ToSpider(item []*item.Field) []*req.Request {
+func InitToSpider(item []*item.Field) []*req.Request {
 	request := make([]*req.Request, 0)
 	for _, url := range FindKey(StartURL, item).StartURL {
 		startReq := req.New(url)
@@ -135,6 +135,7 @@ func ToSpider(item []*item.Field) []*req.Request {
 		startReq.UUID = HashK(url)
 		startReq.Download = FindKey(Download, item).Value
 		startReq.Retry = 1
+		startReq.Seed = false
 		request = append(request, startReq)
 	}
 	return request

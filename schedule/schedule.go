@@ -5,6 +5,7 @@ import (
 	"og/context"
 	"og/filter"
 	req "og/reqeuest"
+	"strconv"
 	"sync"
 )
 
@@ -37,7 +38,7 @@ func (self *Schedule) Len() int {
 
 func (self *Schedule) Process(req *req.Request) {
 	// s.manager = append(s.manager, req)
-	if !self.filter.Contains(req.URL) {
+	if !self.filter.Contains(req.URL + strconv.Itoa(req.Retry)) {
 		self.manager.Push(req)
 	}
 	if req.Seed {
