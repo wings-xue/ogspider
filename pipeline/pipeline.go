@@ -39,14 +39,8 @@ func New(scheduler chan *req.Request, db *db.PgSQL) *Pipeline {
 	}
 }
 
-func (self *Pipeline) toItemReq(resp *response.Response) []*req.Request {
-	// 1. 选择当前需要处理的item
-	// 2. 提取补全item -> [][]item.itme
-	// -- 需要处理（分裂css， 直接css）-> 函数处理
-	// -- 不需要处理
-	// 3. []item.item to request
-
-	return []*req.Request{resp.Req}
+func (self *Pipeline) toRequest(resp *response.Response) []*req.Request {
+	return resp.Extract()
 }
 
 func (self *Pipeline) toPageReq(resp *response.Response) []*req.Request {
@@ -92,8 +86,8 @@ func (self *Pipeline) process(resp *response.Response) []*req.Request {
 
 	request := make([]*req.Request, 0)
 	// 解析response
-	request = append(request, self.toItemReq(resp)...)
-	request = append(request, self.toPageReq(resp)...)
+	request = append(request, self.toRequest(resp)...)
+
 	return request
 
 }
