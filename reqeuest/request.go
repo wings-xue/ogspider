@@ -1,6 +1,7 @@
 package req
 
 import (
+	"og/hash"
 	"og/item"
 	"og/setting"
 )
@@ -52,4 +53,19 @@ func ToTableSchema(tablename string, request *Request) string {
 	column += setting.CrawlerRstKey + " text,\n"
 	return "create table if not exists " + tablename + "(" + column + " UNIQUE(req_id)) ;"
 
+}
+
+func ToRequest(field []*item.Field) *Request {
+
+	url := item.FindKey(setting.URLName, field).Value
+	request := New(url)
+	request.Datas = field
+	request.Host = item.FindKey(setting.Host, field).Value
+	request.Status = StatusWait
+	request.UUID = hash.Hash(url)
+	request.Download = item.FindKey(setting.Download, field).Value
+	request.Retry = 1
+	request.Seed = false
+
+	return request
 }

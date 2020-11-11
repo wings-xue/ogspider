@@ -30,13 +30,40 @@ type Field struct {
 	Download string
 }
 
-func HasValue(name string, model Field) bool {
-	value := reflect.ValueOf(model).FieldByName(name)
-	return value.String() == ""
+func HasAttr(name string, reverse bool) func(f *Field) bool {
+	return func(f *Field) bool {
+		value := reflect.ValueOf(f).FieldByName(name)
+		out := value.String()
+		if reverse {
+			return out == ""
+		}
+		return out != ""
+	}
 }
 
 // 过滤
-func Filter(attr string, field []*Field) []*Field {
+func Filter(field []*Field, f func(f *Field) bool) []*Field {
+	var out []*Field
+	for _, x := range field {
+		if f(x) {
+			out = append(out, x)
+		}
+	}
+	return out
+}
 
-	return []*Field{}
+func Append(field1 [][]*Field, field2 []*Field) [][]*Field {
+	for _, f := range field1 {
+		f = append(f, field2...)
+	}
+	return field1
+}
+
+func FindKey(key string, field []*Field) *Field {
+	for _, f := range field {
+		if f.Name == key {
+			return f
+		}
+	}
+	return &Field{}
 }
