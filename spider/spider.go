@@ -19,16 +19,15 @@ func New(scheduler chan *req.Request, database *db.PgSQL) *Spider {
 	}
 }
 
-func ReadMemory() []*req.Request {
-	return ToSpider(Zhaotoubiao())
-
+func InitMemory() []*req.Request {
+	return InitToSpider(Zhaotoubiao())
 }
 
-func ReadDB() []*req.Request {
+func InitDD() []*req.Request {
 	return []*req.Request{req.New("")}
 }
 
-func (s *Spider) CreateTable(r *req.Request, db *db.PgSQL) {
+func (s *Spider) InitTable(r *req.Request, db *db.PgSQL) {
 	tablename := FindKey(setting.TableName, Zhaotoubiao()).Value
 	_, err := db.Conn.Exec(req.ToTableSchema(tablename, r))
 	if err != nil {
@@ -38,13 +37,13 @@ func (s *Spider) CreateTable(r *req.Request, db *db.PgSQL) {
 }
 
 func (s *Spider) Run() {
-	request := ReadMemory()
+	request := InitMemory()
 	log.Printf("[spider] init spider :%d", len(request))
 	pgsql := db.New()
 	for _, r := range request {
 
 		pgsql.Update(r, true)
-		s.CreateTable(r, pgsql)
+		s.InitTable(r, pgsql)
 		s.scheduler <- r
 	}
 }

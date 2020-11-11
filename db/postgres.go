@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	req "og/reqeuest"
+	"og/setting"
 	"os"
 	"os/signal"
 	"syscall"
@@ -29,21 +30,31 @@ func New() *PgSQL {
 
 // upsert == true ,存在更新，不存在插入
 // upser == false, 存在丢弃，不存在插入
-func (self *PgSQL) Update(r *req.Request, upsert bool) {
+func (self *PgSQL) Update(r *req.Request, upsert bool) error {
 	if upsert {
-		self.Conn.Model(r).
+		_, err := self.Conn.Model(r).
 			OnConflict("(uuid) DO UPDATE").
 			Set("download=EXCLUDED.download").
 			Set("datas=EXCLUDED.datas").
 			Set("status=EXCLUDED.status").
 			Set("retry=EXCLUDED.retry").
 			Insert()
+		return err
 		// fmt.Println(rst)
 		// fmt.Println(err)
 	} else {
-		self.Conn.Model(r).OnConflict("DO NOTHING").SelectOrInsert()
-		// fmt.Println(rst)
-		// fmt.Println(err)
+		_, err := self.Conn.Model(r).OnConflict("DO NOTHING").SelectOrInsert()
+		return err
+	}
+
+}
+
+// upsert == true ,存在更新，不存在插入
+// upser == false, 存在丢弃，不存在插入
+func (self *PgSQL) MustUpdate(r *req.Request, upsert bool) {
+	err := self.Update(r, upsert)
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -67,4 +78,15 @@ func (self *PgSQL) Close() {
 		self.Conn.Close()
 		os.Exit(0)
 	}()
+}
+
+func (self *PgSQL) Save(tablename string, rst map[string]interface{}) {
+	m := self.Conn.Model(&rst).TableExpr(tablename).OnConflict("(" + setting.CrawlerRstKey + ")" + " DO UPDATE")
+	for key, _ := range rst {
+		m.Set(key + "=EXCLUDED." + key)
+	}
+	_, err := m.Insert()
+	if err != nil {
+		panic(err)
+	}
 }

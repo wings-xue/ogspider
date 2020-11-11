@@ -1,6 +1,7 @@
 package req
 
 import (
+	"og/hash"
 	"og/item"
 	"og/setting"
 )
@@ -14,7 +15,7 @@ const (
 )
 
 type Request struct {
-	tableName struct{} `pg:"job,alias:job"`
+	tableName struct{} `pg:"job,alias:job,discard_unknown_columns"`
 	UUID      string
 	URL       string
 	Host      string
@@ -23,7 +24,7 @@ type Request struct {
 	Status    string // waitting， scheduler， succeed， fail， retry
 	Retry     int
 	Log       string
-	Seed      bool
+	Seed      bool `pg:"-"` // 是否做为种子爬取新的request对象
 }
 
 // New 创建一个Request对象, 可以传入任何对象
@@ -52,4 +53,21 @@ func ToTableSchema(tablename string, request *Request) string {
 	column += setting.CrawlerRstKey + " text,\n"
 	return "create table if not exists " + tablename + "(" + column + " UNIQUE(req_id)) ;"
 
+}
+
+func ToRequest(fields []*item.Field) []*Request {
+	out := make([]*Request, 0)
+	for _, field := range item.FindReq(fields) {
+		url := field.Value
+		request := New(url)
+		request.Datas = fields
+		request.Host = item.FindKey(setting.Host, fields).Value
+		request.Status = StatusWait
+		request.UUID = hash.Hash(url)
+		request.Download = item.FindKey(setting.Download, fields).Value
+		request.Retry = 1
+		request.Seed = false
+	}
+
+	return out
 }
