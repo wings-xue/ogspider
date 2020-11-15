@@ -12,7 +12,11 @@ import (
 
 func (self *Pipeline) Process(resp *response.Response) {
 	log.Printf("[pipeline] %s status code : %d\n", resp.Req.URL, resp.StatusCode)
-
+	if resp.StatusCode != 200 {
+		r := self.handleReq(resp)
+		self.sendReq(r)
+		return
+	}
 	// 1. 解析中（1. responsn->request 2. new page）
 	request := self.process(resp)
 	// 2. new request -> chan

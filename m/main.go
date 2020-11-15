@@ -41,6 +41,9 @@ func find(ctx context.Context) string {
 
 // 单独的监控协程
 func watch(ctx context.Context, name string) {
+	defer func() {
+		fmt.Println("defer")
+	}()
 	// for {
 	// 	select {
 	// 	case <-ctx.Done():

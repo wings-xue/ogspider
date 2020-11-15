@@ -44,7 +44,10 @@ func (self *Response) Extract() []*req.Request {
 
 	field := item.Append(self.ExtractRows(rowsField), self.ExtractRow(rowField))
 	for _, f := range field {
-		out = append(out, req.ToRequest(f)...)
+		if f != nil {
+			out = append(out, req.ToRequest(f)...)
+		}
+
 	}
 	return out
 }
