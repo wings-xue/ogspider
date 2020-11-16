@@ -115,9 +115,11 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 	page.MustEvalOnNewDocument(`window.alert = () => {}`)
 
 	var e proto.NetworkResponseReceived
+
 	wait := page.WaitEvent(&e)
 	navErr := page.Timeout(10 * time.Second).Navigate(r.URL)
 	wait()
+	page.WaitLoad()
 
 	if navErr != nil {
 		return resp
@@ -128,7 +130,11 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 		resp.StatusCode = 501
 		return resp
 	}
-	resp.Page = ele.MustHTML()
+	s, err := ele.HTML()
+	if err != nil {
+		resp.StatusCode = 502
+	}
+	resp.Page = s
 	fmt.Println(resp.Page)
 	resp.StatusCode = 200
 	return resp
