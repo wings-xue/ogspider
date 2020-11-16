@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"og/item"
 	req "og/reqeuest"
-	"strconv"
 )
 
 const (
@@ -22,10 +21,10 @@ func Zhaotoubiao() []*item.Field {
 		"https://www.chinabidding.cn/search/searchzbw/search2?areaid=17&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
 		"https://www.chinabidding.cn/search/searchzbw/search2?areaid=18&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
 	}
-	for i := 0; i < 1000; i++ {
-		s := strconv.Itoa(i)
-		StartURL = append(StartURL, StartURL[0]+s)
-	}
+	// for i := 0; i < 1000; i++ {
+	// 	s := strconv.Itoa(i)
+	// 	StartURL = append(StartURL, StartURL[0]+s)
+	// }
 	var Field = []*item.Field{
 		{
 			Name:     "start_url",
@@ -44,7 +43,7 @@ func Zhaotoubiao() []*item.Field {
 		{
 			Name:    "title",
 			BaseCSS: "[class*=listrow]",
-			CSS:     "[class*=listrow] td:nth-child(2) a",
+			CSS:     "td:nth-child(2) a",
 			Attr:    "innerText",
 			UrlReg:  ListURL,
 		},

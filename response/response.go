@@ -95,10 +95,12 @@ func (self *Response) ExtractRows(field []*item.Field) [][]*item.Field {
 		log.Printf("[response] %s", err.Error())
 	}
 	doc.Find(base).Each(func(r int, s *goquery.Selection) {
-		row := make([]*item.Field, len(field))
+		row := make([]*item.Field, 0)
 		for i := 0; i < len(field); i++ {
 			tmp := *field[i]
-			tmp.ExtractValue = self.Selector(tmp.CSS, tmp.Attr)
+			tmpSelf := New(req.New("tmp"))
+			tmpSelf.Page, _ = s.Html()
+			tmp.ExtractValue = tmpSelf.Selector(tmp.CSS, tmp.Attr)
 			tmp.Value = self.Match(tmp.Do, tmp.ExtractValue)
 			row = append(row, &tmp)
 		}
