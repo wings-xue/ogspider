@@ -2,6 +2,7 @@ package download
 
 import (
 	"context"
+	"fmt"
 	"log"
 	req "og/reqeuest"
 	"og/response"
@@ -16,14 +17,14 @@ import (
 )
 
 func (self *Download) Process(r *req.Request) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 100*time.Second)
 	done := make(chan *response.Response)
 	go func() {
 		done <- self.download(ctx, r)
 	}()
 	select {
 	case <-ctx.Done():
-		self.pipeliner <- response.New(r)
+		self.pipeliner <- response.NewFail(r)
 	case resp := <-done:
 		self.pipeliner <- resp
 	}
@@ -40,13 +41,13 @@ const (
 	Chrome = `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
 )
 
-func AddChrome() {
+func addENV() {
 	os.Setenv("rob", "bin="+Chrome)
 }
 
 func New(pipeliner chan *response.Response) *Download {
 
-	AddChrome()
+	addENV()
 	return &Download{
 		pipeliner: pipeliner,
 		Headless:  true,
@@ -71,7 +72,14 @@ func (self *Download) Require() {
 	defer self.mx.Unlock()
 	if self.browser == nil {
 		if !self.Headless {
-			url, _ := launcher.New().Bin(Chrome).Headless(self.Headless).Launch()
+			url, err := launcher.New().
+				Bin(Chrome).
+				Headless(self.Headless).
+				Devtools(true).
+				Launch()
+			if err != nil {
+				log.Panic(err)
+			}
 			b := rod.New().ControlURL(url).MustConnect()
 			self.browser = b
 		} else {
@@ -79,6 +87,7 @@ func (self *Download) Require() {
 			self.browser = b
 		}
 	}
+	self.browser.Page(proto.TargetCreateTarget{URL: ""})
 }
 
 func (self *Download) download(ctx context.Context, r *req.Request) *response.Response {
@@ -93,7 +102,7 @@ func (self *Download) download(ctx context.Context, r *req.Request) *response.Re
 
 func (self *Download) httpDownload(ctx context.Context, r *req.Request) *response.Response {
 
-	resp := response.New(r)
+	resp := response.NewFail(r)
 
 	res, _ := requ.Get(r.URL)
 	content, _ := res.ToString()
@@ -103,7 +112,7 @@ func (self *Download) httpDownload(ctx context.Context, r *req.Request) *respons
 }
 
 func (self *Download) pageDownload(ctx context.Context, r *req.Request) *response.Response {
-	resp := response.New(r)
+	resp := response.NewFail(r)
 
 	if self.Empty() {
 		self.Require()
@@ -115,22 +124,22 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 	}
 	// disable alert
 	if page == nil {
-		log.Panic("ASDF")
+		return response.NewFail(r)
 	}
 	page.EvalOnNewDocument(`window.alert = () => {}`)
 
 	var e proto.NetworkResponseReceived
 
 	wait := page.WaitEvent(&e)
-	navErr := page.Timeout(10 * time.Second).Navigate(r.URL)
+	navErr := page.Timeout(100 * time.Second).Navigate(r.URL)
 	wait()
 	page.WaitLoad()
-
+	fmt.Println(page.LoadState(&proto.NetworkEnable{}))
 	if navErr != nil {
 		return resp
 	}
 
-	ele, err1 := page.Timeout(10 * time.Second).Element("html")
+	ele, err1 := page.Timeout(100 * time.Second).Element("html")
 	if err1 != nil {
 		resp.StatusCode = 501
 		return resp

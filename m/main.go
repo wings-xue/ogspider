@@ -1,57 +1,56 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"os"
 	"time"
+
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
+	"github.com/go-rod/rod/lib/proto"
 )
 
-func tree() {
-	ctx1 := context.Background()
-	// ctx2, _ := context.WithCancel(ctx1)
-	ctx3, _ := context.WithTimeout(ctx1, time.Second*5)
-	ctx4, _ := context.WithTimeout(ctx3, time.Second*3)
-	ctx5, _ := context.WithTimeout(ctx3, time.Second*6)
-	ctx6 := context.WithValue(ctx5, "userID", 12)
+func addENV() {
+	var Chrome = `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
+	os.Setenv("rob", "show,bin="+Chrome)
 
-	go watch(ctx1, "ctx1")
-	// go watch(ctx2, "ctx2")
-	go watch(ctx3, "ctx3")
-	go watch(ctx4, "ctx4")
-	go watch(ctx5, "ctx5")
-	go watch(ctx6, "ctx6")
-
-	select {
-	case <-ctx4.Done():
-		fmt.Println("exit")
-	}
-	// cancel()
 }
 
 func main() {
-	// 创建一个子节点的context,3秒后自动超时
-	tree()
+	l := launcher.New().
+		Headless(false).
+		Devtools(true)
 
-}
+	defer l.Cleanup() // remove user-data-dir
 
-func find(ctx context.Context) string {
+	url := l.MustLaunch()
 
-	return "string"
-}
+	// Trace shows verbose debug information for each action executed
+	// Slowmotion is a debug related function that waits 2 seconds between
+	// each action, making it easier to inspect what your code is doing.
+	browser := rod.New().
+		ControlURL(url)
+	browser.Connect()
+	// defer browser.Close()
+	_, err := browser.Page(proto.TargetCreateTarget{URL: "http://www.baidu.com"})
+	if err != nil {
+		fmt.Println(err)
+	}
 
-// 单独的监控协程
-func watch(ctx context.Context, name string) {
-	defer func() {
-		fmt.Println("defer")
-	}()
-	// for {
-	// 	select {
-	// 	case <-ctx.Done():
-	// 		fmt.Println(name, "收到信号，监控退出,time=", time.Now().Unix())
-	// 		return
-	// 	default:
-	// 		fmt.Println(name, "goroutine监控中,time=", time.Now().Unix())
-	// 		time.Sleep(1 * time.Second)
-	// 	}
-	// }
+	// page1.Close()
+	time.Sleep(time.Second * 2)
+
+	_, err = browser.Page(proto.TargetCreateTarget{URL: "http://www.baidu.com"})
+	if err != nil {
+		fmt.Println(err)
+	}
+	// page2.Close()
+	time.Sleep(time.Second * 2)
+
+	page3, err := browser.Page(proto.TargetCreateTarget{URL: "http://www.baidu.com"})
+	if err != nil {
+		fmt.Println(err)
+	}
+	page3.Close()
+	time.Sleep(time.Second * 2)
 }

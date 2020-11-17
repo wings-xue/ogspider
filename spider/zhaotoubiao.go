@@ -18,8 +18,9 @@ func Zhaotoubiao() []*item.Field {
 	ListURL := `https:\/\/www.chinabidding.cn\/search\/searchzbw\/search2\?areaid=\d+&keywords=&page=\d+&categoryid=&rp=22&table_type=0&b_date=`
 	DetailURL := `www.chinabidding.cn/.*?/.*?.html`
 	StartURL := []string{
-		"https://www.chinabidding.cn/search/searchzbw/search2?areaid=17&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
-		"https://www.chinabidding.cn/search/searchzbw/search2?areaid=18&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
+		"http://www.baidu.com",
+		// "https://www.chinabidding.cn/search/searchzbw/search2?areaid=17&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
+		// "https://www.chinabidding.cn/search/searchzbw/search2?areaid=18&keywords=&page=1&categoryid=&rp=22&table_type=0&b_date=",
 	}
 	// for i := 0; i < 1000; i++ {
 	// 	s := strconv.Itoa(i)

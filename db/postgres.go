@@ -60,7 +60,7 @@ func (self *PgSQL) Update(r *req.Request, upsert bool) error {
 func (self *PgSQL) MustUpdate(r *req.Request, upsert bool) {
 	err := self.Update(r, upsert)
 	if err != nil {
-		panic(err)
+		// panic(err)
 	}
 }
 

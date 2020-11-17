@@ -20,7 +20,7 @@ type Response struct {
 	Page       string
 }
 
-func New(req *req.Request) *Response {
+func NewFail(req *req.Request) *Response {
 	return &Response{
 		Req:        req,
 		StatusCode: 500,
