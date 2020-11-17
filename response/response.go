@@ -45,11 +45,24 @@ func (self *Response) Extract() []*req.Request {
 	field := item.Append(self.ExtractRows(rowsField), self.ExtractRow(rowField))
 	for _, f := range field {
 		if f != nil {
-			out = append(out, req.ToRequest(f)...)
+			out = append(out, self.ToRequest(item.FindKey(setting.URLName, f).Value))
 		}
 
 	}
 	return out
+}
+
+func Selector(doc *goquery.Selection, css, attr string) string {
+	switch {
+	case attr == "innerHTML":
+		s, _ := doc.Find(css).Html()
+		return s
+	case attr == "innerText":
+		return doc.Find(css).Text()
+	default:
+		s, _ := doc.Find(css).Attr(attr)
+		return s
+	}
 }
 
 func (self *Response) Selector(css string, attr string) string {
@@ -70,6 +83,9 @@ func (self *Response) Selector(css string, attr string) string {
 }
 
 func (self *Response) Match(reg string, s string) string {
+	if reg == "" {
+		return s
+	}
 	r, _ := regexp.Compile(reg)
 	return r.FindString(s)
 }
@@ -98,9 +114,7 @@ func (self *Response) ExtractRows(field []*item.Field) [][]*item.Field {
 		row := make([]*item.Field, 0)
 		for i := 0; i < len(field); i++ {
 			tmp := *field[i]
-			tmpSelf := New(req.New("tmp"))
-			tmpSelf.Page, _ = s.Html()
-			tmp.ExtractValue = tmpSelf.Selector(tmp.CSS, tmp.Attr)
+			tmp.ExtractValue = Selector(s, tmp.CSS, tmp.Attr)
 			tmp.Value = self.Match(tmp.Do, tmp.ExtractValue)
 			row = append(row, &tmp)
 		}

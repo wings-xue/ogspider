@@ -2,7 +2,6 @@ package download
 
 import (
 	"context"
-	"fmt"
 	"log"
 	req "og/reqeuest"
 	"og/response"
@@ -109,10 +108,16 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 	if self.Empty() {
 		self.Require()
 	}
-	page := self.browser.MustPage("")
+	page, err := self.browser.Page(proto.TargetCreateTarget{URL: ""})
 	defer page.Close()
+	if err != nil {
+		log.Println(err.Error())
+	}
 	// disable alert
-	page.MustEvalOnNewDocument(`window.alert = () => {}`)
+	if page == nil {
+		log.Panic("ASDF")
+	}
+	page.EvalOnNewDocument(`window.alert = () => {}`)
 
 	var e proto.NetworkResponseReceived
 
@@ -135,7 +140,7 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 		resp.StatusCode = 502
 	}
 	resp.Page = s
-	fmt.Println(resp.Page)
+	// fmt.Println(resp.Page)
 	resp.StatusCode = 200
 	return resp
 

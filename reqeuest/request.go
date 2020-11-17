@@ -55,19 +55,17 @@ func ToTableSchema(tablename string, request *Request) string {
 
 }
 
-func ToRequest(fields []*item.Field) []*Request {
-	out := make([]*Request, 0)
-	for _, field := range item.FindReq(fields) {
-		url := field.Value
-		request := New(url)
-		request.Datas = fields
-		request.Host = item.FindKey(setting.Host, fields).Value
-		request.Status = StatusWait
-		request.UUID = hash.Hash(url)
-		request.Download = item.FindKey(setting.Download, fields).Value
-		request.Retry = 1
-		request.Seed = false
-	}
+func ToRequest(fields []*item.Field) *Request {
 
-	return out
+	url := item.FindKey(setting.URLName, fields).Value
+	request := New(url)
+	request.Datas = fields
+	request.Host = item.FindKey(setting.Host, fields).Value
+	request.Status = StatusWait
+	request.UUID = hash.Hash(url)
+	request.Download = item.FindKey(setting.Download, fields).Value
+	request.Retry = 1
+	request.Seed = false
+
+	return request
 }

@@ -25,6 +25,7 @@ func Zhaotoubiao() []*item.Field {
 	// 	s := strconv.Itoa(i)
 	// 	StartURL = append(StartURL, StartURL[0]+s)
 	// }
+	// Host 校验： 不能带http
 	var Field = []*item.Field{
 		{
 			Name:     "start_url",
@@ -32,7 +33,7 @@ func Zhaotoubiao() []*item.Field {
 		},
 		{
 			Name:   "host",
-			Value:  "https://www.chinabidding.cn/cgxx/",
+			Value:  "www.chinabidding.cn",
 			UrlReg: ListURL,
 		},
 		{

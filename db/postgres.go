@@ -39,14 +39,20 @@ func (self *PgSQL) Update(r *req.Request, upsert bool) error {
 			Set("status=EXCLUDED.status").
 			Set("retry=EXCLUDED.retry").
 			Insert()
-		return err
+		if err != nil {
+			return err
+		}
+
 		// fmt.Println(rst)
 		// fmt.Println(err)
 	} else {
 		_, err := self.Conn.Model(r).OnConflict("DO NOTHING").SelectOrInsert()
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
+	}
+	return nil
 }
 
 // upsert == true ,存在更新，不存在插入

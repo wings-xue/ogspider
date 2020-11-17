@@ -28,7 +28,7 @@ type Field struct {
 	// 指明下载器
 	// 默认rod
 	Download string
-	Active   bool
+	// Active   bool
 }
 
 func HasAttr(name string, reverse bool) func(f Field) bool {
@@ -54,10 +54,13 @@ func Filter(field []*Field, f func(f Field) bool) []*Field {
 }
 
 func Append(field1 [][]*Field, field2 []*Field) [][]*Field {
+	out := make([][]*Field, 0)
 	for _, f := range field1 {
 		f = append(f, field2...)
+		out = append(out, f)
+		// out = append(f, field2...)
 	}
-	return field1
+	return out
 }
 
 func FindKey(key string, field []*Field) *Field {
@@ -69,15 +72,15 @@ func FindKey(key string, field []*Field) *Field {
 	return &Field{}
 }
 
-func FindReq(field []*Field) []*Field {
-	out := make([]*Field, 0)
-	if len(field) == 0 {
-		return out
-	}
-	for _, each := range field {
-		if each.Active {
-			out = append(out, each)
-		}
-	}
-	return out
-}
+// func FindReq(field []*Field) []*Field {
+// 	out := make([]*Field, 0)
+// 	if len(field) == 0 {
+// 		return out
+// 	}
+// 	for _, each := range field {
+// 		if each.Active {
+// 			out = append(out, each)
+// 		}
+// 	}
+// 	return out
+// }
