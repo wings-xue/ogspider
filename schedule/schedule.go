@@ -30,7 +30,7 @@ func (self *Schedule) Inc() {
 	self.WorkNum++
 }
 
-func (self *Schedule) Len() int {
+func (self *Schedule) WorkLen() int {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	return self.WorkNum
@@ -44,7 +44,7 @@ func (self *Schedule) Process(req *req.Request) {
 	if req.Seed {
 		self.Minus()
 	}
-	log.Printf("[scheduler] queue request: %d, worker: %d", self.manager.Len(), self.Len())
+	log.Printf("[scheduler] queue request: %d, worker: %d", self.manager.Len(), self.WorkLen())
 }
 
 func New(downloader chan *req.Request) *Schedule {
@@ -60,7 +60,7 @@ func New(downloader chan *req.Request) *Schedule {
 func (self *Schedule) Run() {
 	for {
 
-		if self.manager.Len() > 0 && self.Len() < 20 {
+		if self.manager.Len() > 0 && self.WorkLen() < 20 {
 			self.Inc()
 			req := self.manager.Pop()
 			req.Seed = true
