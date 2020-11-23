@@ -1,13 +1,14 @@
 package pipeline
 
 import (
-	"fmt"
 	"log"
 	"og/db"
 	req "og/reqeuest"
 	"og/response"
 	"og/setting"
 	"og/spider"
+	"strconv"
+	"strings"
 )
 
 func (self *Pipeline) Process(resp *response.Response) {
@@ -22,7 +23,7 @@ func (self *Pipeline) Process(resp *response.Response) {
 	// 2. new request -> chan
 	for _, r := range request {
 		self.sendReq(r)
-		fmt.Println(r)
+		// fmt.Println(r)
 	}
 	// 3. save Crawler RST
 	self.saveResponse(resp)
@@ -48,14 +49,34 @@ func (self *Pipeline) toRequest(resp *response.Response) []*req.Request {
 }
 
 func (self *Pipeline) toPageReq(resp *response.Response) []*req.Request {
-	return []*req.Request{}
+	out := make([]*req.Request, 0)
+	_total := spider.FindKey(setting.PageTotal, resp.Req.Datas).Value
+	total, _ := strconv.Atoi(_total)
+	for _, each := range spider.FindKey(setting.StartURL, resp.Req.Datas).StartURL {
+		if resp.URL == each {
+			for i := 1; i < total; i++ {
+				newPage := "page=" + strconv.Itoa(i)
+				newURL := strings.Replace(each, "page=1", newPage, -1)
+				q := *resp.Req
+				q.URL = newURL
+				q.UUID = spider.HashK(newURL)
+				q.Seed = false
+				out = append(out, &q)
+			}
+		}
+	}
+	return out
 }
 
 func (self *Pipeline) saveResponse(resp *response.Response) {
-	rst := req.ToCrawlerRst(resp.Req)
-	rst["req_id"] = resp.Req.URL
-	tablename := spider.FindKey(setting.TableName, spider.Zhaotoubiao()).Value
-	self.db.Save(tablename, rst)
+	reg := spider.FindKey(setting.SaveResponse, resp.Req.Datas).Value
+	if resp.Match(reg, resp.URL) != "" {
+		rst := req.ToCrawlerRst(resp.Req)
+		rst["req_id"] = resp.Req.URL
+		tablename := spider.FindKey(setting.TableName, spider.Zhaotoubiao()).Value
+		self.db.Save(tablename, rst)
+	}
+
 }
 
 func (self *Pipeline) sendReq(r *req.Request) {
@@ -65,9 +86,9 @@ func (self *Pipeline) sendReq(r *req.Request) {
 
 func (self *Pipeline) saveReq(req *req.Request) {
 	if req.Seed {
-		self.db.MustUpdate(req, true)
+		self.db.MustUpdate(*req, true)
 	} else {
-		self.db.MustUpdate(req, false)
+		self.db.MustUpdate(*req, false)
 	}
 }
 
@@ -91,7 +112,7 @@ func (self *Pipeline) process(resp *response.Response) []*req.Request {
 	request := make([]*req.Request, 0)
 	// 解析response
 	request = append(request, self.toRequest(resp)...)
-
+	request = append(request, self.toPageReq(resp)...)
 	return request
 
 }
