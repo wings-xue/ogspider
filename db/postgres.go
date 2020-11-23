@@ -46,7 +46,9 @@ func (self *PgSQL) Update(r *req.Request, upsert bool) error {
 		// fmt.Println(rst)
 		// fmt.Println(err)
 	} else {
-		_, err := self.Conn.Model(r).OnConflict("DO NOTHING").SelectOrInsert()
+		_, err := self.Conn.Model(r).
+			OnConflict("(uuid) DO NOTHING").
+			Insert()
 		if err != nil {
 			return err
 		}
@@ -57,10 +59,12 @@ func (self *PgSQL) Update(r *req.Request, upsert bool) error {
 
 // upsert == true ,存在更新，不存在插入
 // upser == false, 存在丢弃，不存在插入
-func (self *PgSQL) MustUpdate(r *req.Request, upsert bool) {
-	err := self.Update(r, upsert)
+func (self *PgSQL) MustUpdate(r req.Request, upsert bool) {
+	err := self.Update(&r, upsert)
 	if err != nil {
-		// panic(err)
+
+		panic(err)
+
 	}
 }
 

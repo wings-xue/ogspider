@@ -2,11 +2,11 @@ package download
 
 import (
 	"context"
-	"fmt"
 	"log"
 	req "og/reqeuest"
 	"og/response"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -73,6 +73,7 @@ func (self *Download) Require() {
 	if self.browser == nil {
 		if !self.Headless {
 			url, err := launcher.New().
+				Proxy("192.168.100.210:3128").
 				Bin(Chrome).
 				Headless(self.Headless).
 				Devtools(true).
@@ -83,7 +84,14 @@ func (self *Download) Require() {
 			b := rod.New().ControlURL(url).MustConnect()
 			self.browser = b
 		} else {
-			b := rod.New().MustConnect()
+			url, err := launcher.New().
+				Proxy("192.168.100.210:3128").
+				Bin(Chrome).
+				Launch()
+			if err != nil {
+				log.Panic(err)
+			}
+			b := rod.New().ControlURL(url).MustConnect()
 			self.browser = b
 		}
 	}
@@ -91,9 +99,9 @@ func (self *Download) Require() {
 }
 
 func (self *Download) download(ctx context.Context, r *req.Request) *response.Response {
-	log.Printf("[Download] fetcher url: %s\n", r.URL)
+	log.Printf("[Download] fetcher url: %s, retry: %d\n", r.URL, r.Retry)
 	// 开启headless
-	self.SetHeadless(false)
+	self.SetHeadless(true)
 
 	resp := self.pageDownload(ctx, r)
 	return resp
@@ -134,7 +142,7 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 	navErr := page.Timeout(100 * time.Second).Navigate(r.URL)
 	wait()
 	page.WaitLoad()
-	fmt.Println(page.LoadState(&proto.NetworkEnable{}))
+
 	if navErr != nil {
 		return resp
 	}
@@ -148,9 +156,25 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 	if err != nil {
 		resp.StatusCode = 502
 	}
+
 	resp.Page = s
 	// fmt.Println(resp.Page)
-	resp.StatusCode = 200
+	resp.StatusCode = ErrorPass(s)
 	return resp
 
+}
+
+func ErrorPass(html string) int {
+	if code := ErrorAccessBlock(html); code != 200 {
+		return code
+	}
+	return 200
+}
+
+func ErrorAccessBlock(html string) int {
+	substr := "很抱歉，由于您访问的URL有可能对网站造成安全威胁，您的访问被阻断"
+	if strings.Contains(html, substr) {
+		return 405
+	}
+	return 200
 }
