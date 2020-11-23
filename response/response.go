@@ -23,12 +23,13 @@ type Response struct {
 func NewFail(req *req.Request) *Response {
 	return &Response{
 		Req:        req,
+		URL:        req.URL,
 		StatusCode: 500,
 	}
 }
 
 func (self *Response) Extract() []*req.Request {
-	// 1. 直接提取[]*field -> []*Field
+	// 1. 直接提取[]*field -> []*Field,并且修改原req为携带数据的新req
 	// 2. 产生更多行的field[]*field -> [][]*Field
 	// 3. 合并field ->[][]*Field
 	// 4. 转为req.request
@@ -45,7 +46,9 @@ func (self *Response) Extract() []*req.Request {
 	field := item.Append(self.ExtractRows(rowsField), self.ExtractRow(rowField))
 	for _, f := range field {
 		if f != nil {
-			out = append(out, self.ToRequest(item.FindKey(setting.URLName, f).Value))
+			q := self.ToRequest(item.FindKey(setting.URLName, f).Value)
+			q.AddDatas(f)
+			out = append(out, q)
 		}
 
 	}
@@ -95,6 +98,7 @@ func (self *Response) ExtractRow(field []*item.Field) []*item.Field {
 		if each.Value == "" {
 			each.ExtractValue = self.Selector(each.CSS, each.Attr)
 			each.Value = self.Match(each.Do, each.ExtractValue)
+
 		}
 	}
 	return field
