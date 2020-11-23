@@ -25,6 +25,7 @@ type Request struct {
 	Retry     int
 	Log       string
 	Seed      bool `pg:"-"` // 是否做为种子爬取新的request对象
+
 }
 
 // New 创建一个Request对象, 可以传入任何对象
@@ -35,10 +36,14 @@ func New(URL string) *Request {
 	}
 }
 
+func (request *Request) AddDatas(datas []*item.Field) {
+	request.Datas = datas
+}
+
 func ToCrawlerRst(request *Request) map[string]interface{} {
 	rst := make(map[string]interface{})
 	for _, item := range request.Datas {
-		rst[item.Name] = rst[item.Value]
+		rst[item.Name] = item.Value
 	}
 	rst[setting.CrawlerRstKey] = request.UUID
 	return rst
