@@ -8,7 +8,6 @@ import (
 	"og/pipeline"
 	req "og/reqeuest"
 	"og/schedule"
-	"og/spider"
 )
 
 type Engine struct {
@@ -30,34 +29,36 @@ func (e *Engine) PushReq(r *req.Request) {
 }
 
 // Run: engine 运行
-func (e *Engine) Run() {
-	// 初始化数据库
-	database := db.New()
-	database.Close()
-
-	// 初始化spider
-	Spider := spider.New(e.scheduler, database)
-	go Spider.Run()
+func (e *Engine) Run(
+	database *db.PgSQL,
+	scheduler *schedule.Schedule,
+	download *download.Download,
+	pipeline *pipeline.Pipeline,
+) {
 
 	// 初始化scheduler
-	Schedule := schedule.New(e.downloader)
-	go Schedule.Run()
 
-	Download := download.New(e.pipeliner)
-
-	Pipeline := pipeline.New(e.scheduler, database)
 	for {
 		select {
 		case req := <-e.scheduler:
-			Schedule.Process(req)
+			scheduler.Process(req)
 		case req := <-e.downloader:
-			go Download.Process(req)
+			go download.Process(req)
 		case resp := <-e.pipeliner:
-			go Pipeline.Process(resp)
+			go pipeline.Process(resp)
 			// default:
 			// time.Sleep(3 * time.Second)
 			// log.Println("engine process")
 		}
 
 	}
+}
+
+func RunForever(
+// scheduler *schedule.Schedule,
+// downloadr *download.Download,
+// pipeliner *pipeline.Pipeline,
+// scraper *scrape.Scrape,
+) {
+
 }

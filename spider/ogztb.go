@@ -1,22 +1,5 @@
 package spider
 
-import (
-	"og/db"
-	req "og/reqeuest"
-	"og/response"
-)
-
-type ZtbSpider struct {
-	BaseSpier
-}
-
-func (spider ZtbSpider) Parse(resp *response.Response, r *req.Request) []*req.Request {
-	return nil
-}
-func (spider ZtbSpider) CreateTable(db *db.PgSQL) {
-
-}
-
 // func ZhaotoubiaoSpider() {
 // 	pgsql := db.New()
 // 	startURL := []string{

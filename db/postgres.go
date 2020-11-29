@@ -2,8 +2,8 @@ package db
 
 import (
 	"fmt"
+	ogconfig "og/const"
 	req "og/reqeuest"
-	"og/setting"
 	"os"
 	"os/signal"
 	"syscall"
@@ -91,7 +91,7 @@ func (self *PgSQL) Close() {
 }
 
 func (self *PgSQL) Save(tablename string, rst map[string]interface{}) {
-	m := self.Conn.Model(&rst).TableExpr(tablename).OnConflict("(" + setting.CrawlerRstKey + ")" + " DO UPDATE")
+	m := self.Conn.Model(&rst).TableExpr(tablename).OnConflict("(" + ogconfig.CrawlerRstKey + ")" + " DO UPDATE")
 	for key, _ := range rst {
 		m.Set(key + "=EXCLUDED." + key)
 	}

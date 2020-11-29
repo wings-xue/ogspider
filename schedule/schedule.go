@@ -3,6 +3,7 @@ package schedule
 import (
 	"log"
 	"og/context"
+	"og/db"
 	"og/filter"
 	req "og/reqeuest"
 	"strconv"
@@ -57,7 +58,7 @@ func New(downloader chan *req.Request) *Schedule {
 	}
 }
 
-func (self *Schedule) Run() {
+func (self *Schedule) Dispatch() {
 	for {
 
 		if self.manager.Len() > 0 && self.WorkLen() < 20 {
@@ -67,4 +68,8 @@ func (self *Schedule) Run() {
 			self.downloader <- req
 		}
 	}
+}
+
+func OpenSpider(setting map[string]string, downloader chan *req.Request, db *db.PgSQL) {
+
 }

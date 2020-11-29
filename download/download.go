@@ -24,17 +24,17 @@ func (self *Download) Process(r *req.Request) {
 	}()
 	select {
 	case <-ctx.Done():
-		self.pipeliner <- response.NewFail(r)
+		self.scraper <- response.NewFail(r)
 	case resp := <-done:
-		self.pipeliner <- resp
+		self.scraper <- resp
 	}
 }
 
 type Download struct {
-	pipeliner chan *response.Response
-	browser   *rod.Browser
-	mx        sync.Mutex
-	Headless  bool
+	scraper  chan *response.Response
+	browser  *rod.Browser
+	mx       sync.Mutex
+	Headless bool
 }
 
 const (
@@ -45,13 +45,17 @@ func addENV() {
 	os.Setenv("rob", "bin="+Chrome)
 }
 
-func New(pipeliner chan *response.Response) *Download {
+func New(scraper chan *response.Response) *Download {
 
-	addENV()
+	// addENV()
 	return &Download{
-		pipeliner: pipeliner,
-		Headless:  true,
+		scraper:  scraper,
+		Headless: true,
 	}
+}
+
+func (self *Download) FromCrawl() {
+
 }
 
 func (self *Download) SetHeadless(t bool) {
@@ -177,4 +181,8 @@ func ErrorAccessBlock(html string) int {
 		return 405
 	}
 	return 200
+}
+
+func OpenSpider(setting map[string]string, scraper chan *response.Response) {
+
 }

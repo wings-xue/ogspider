@@ -3,10 +3,10 @@ package response
 import (
 	"log"
 	"net/url"
+	ogconfig "og/const"
 	"og/hash"
 	"og/item"
 	req "og/reqeuest"
-	"og/setting"
 	"regexp"
 	"strings"
 
@@ -36,17 +36,17 @@ func (self *Response) Extract() []*req.Request {
 	out := make([]*req.Request, 0)
 	rowField := item.Filter(
 		self.Req.Datas,
-		item.HasAttr(setting.BaseCSS, true),
+		item.HasAttr(ogconfig.BaseCSS, true),
 	)
 	rowsField := item.Filter(
 		self.Req.Datas,
-		item.HasAttr(setting.BaseCSS, false),
+		item.HasAttr(ogconfig.BaseCSS, false),
 	)
 
 	field := item.Append(self.ExtractRows(rowsField), self.ExtractRow(rowField))
 	for _, f := range field {
 		if f != nil {
-			q := self.ToRequest(item.FindKey(setting.URLName, f).Value)
+			q := self.ToRequest(item.FindKey(ogconfig.URLName, f).Value)
 			q.AddDatas(f)
 			out = append(out, q)
 		}
@@ -134,13 +134,13 @@ func (self *Response) newURL(oldURL string) string {
 }
 
 func (self *Response) ToRequest(url string) *req.Request {
-	url = self.ParseUrl(url, item.FindKey(setting.Host, self.Req.Datas).Value)
+	url = self.ParseUrl(url, item.FindKey(ogconfig.Host, self.Req.Datas).Value)
 	request := req.New(url)
 	request.Datas = self.Req.Datas
-	request.Host = item.FindKey(setting.Host, self.Req.Datas).Value
+	request.Host = item.FindKey(ogconfig.Host, self.Req.Datas).Value
 	request.Status = req.StatusWait
 	request.UUID = hash.Hash(url)
-	request.Download = item.FindKey(setting.Download, self.Req.Datas).Value
+	request.Download = item.FindKey(ogconfig.Download, self.Req.Datas).Value
 	request.Retry = 1
 	request.Seed = false
 

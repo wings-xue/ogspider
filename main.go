@@ -1,20 +1,25 @@
 package main
 
 import (
-	"og/engine"
-	req "og/reqeuest"
-	"og/response"
+	og "og/crawl"
+	"og/spider"
 )
 
-func crawler() {
-	scheduler := make(chan *req.Request)
-	downloader := make(chan *req.Request)
-	pipeliner := make(chan *response.Response)
-
-	engine := engine.New(scheduler, downloader, pipeliner)
-	engine.Run()
-}
-
 func main() {
-	crawler()
+	og.Crawl(
+		// 1. 创建BaseSpider对象
+		// 2. 加载Name
+		spider.SpiderNew("zhaotoubiao").
+			// 3. 加载Host
+			SetHost("").
+			// 4. 加载Fields
+			SetFields(spider.Zhaotoubiao()).
+			// 5. 加载StartURL
+			SetStartURL("").
+			SetStartURLFunc("").
+			// 6. 加载Setting
+			SetSetting("").
+			SetDownloadMiddleware(spider.Zhaotoubiao()),
+	)
+
 }

@@ -1,9 +1,9 @@
 package req
 
 import (
+	ogconfig "og/const"
 	"og/hash"
 	"og/item"
-	"og/setting"
 )
 
 const (
@@ -45,7 +45,7 @@ func ToCrawlerRst(request *Request) map[string]interface{} {
 	for _, item := range request.Datas {
 		rst[item.Name] = item.Value
 	}
-	rst[setting.CrawlerRstKey] = request.UUID
+	rst[ogconfig.CrawlerRstKey] = request.UUID
 	return rst
 }
 
@@ -55,20 +55,20 @@ func ToTableSchema(tablename string, request *Request) string {
 	for _, item := range request.Datas {
 		column += item.Name + " text,\n"
 	}
-	column += setting.CrawlerRstKey + " text,\n"
+	column += ogconfig.CrawlerRstKey + " text,\n"
 	return "create table if not exists " + tablename + "(" + column + " UNIQUE(req_id)) ;"
 
 }
 
 func ToRequest(fields []*item.Field) *Request {
 
-	url := item.FindKey(setting.URLName, fields).Value
+	url := item.FindKey(ogconfig.URLName, fields).Value
 	request := New(url)
 	request.Datas = fields
-	request.Host = item.FindKey(setting.Host, fields).Value
+	request.Host = item.FindKey(ogconfig.Host, fields).Value
 	request.Status = StatusWait
 	request.UUID = hash.Hash(url)
-	request.Download = item.FindKey(setting.Download, fields).Value
+	request.Download = item.FindKey(ogconfig.Download, fields).Value
 	request.Retry = 1
 	request.Seed = false
 

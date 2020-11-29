@@ -2,9 +2,9 @@ package spider
 
 import (
 	"log"
+	ogconfig "og/const"
 	"og/db"
 	req "og/reqeuest"
-	"og/setting"
 )
 
 type Spider struct {
@@ -28,7 +28,7 @@ func InitDD() []*req.Request {
 }
 
 func (s *Spider) InitTable(r *req.Request, db *db.PgSQL) {
-	tablename := FindKey(setting.TableName, Zhaotoubiao()).Value
+	tablename := FindKey(ogconfig.TableName, Zhaotoubiao()).Value
 	_, err := db.Conn.Exec(req.ToTableSchema(tablename, r))
 	if err != nil {
 		panic(err)

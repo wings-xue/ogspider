@@ -2,10 +2,10 @@ package pipeline
 
 import (
 	"log"
+	ogconfig "og/const"
 	"og/db"
 	req "og/reqeuest"
 	"og/response"
-	"og/setting"
 	"og/spider"
 	"strconv"
 	"strings"
@@ -44,15 +44,19 @@ func New(scheduler chan *req.Request, db *db.PgSQL) *Pipeline {
 	}
 }
 
+func (self *Pipeline) FromCrawler() {
+
+}
+
 func (self *Pipeline) toRequest(resp *response.Response) []*req.Request {
 	return resp.Extract()
 }
 
 func (self *Pipeline) toPageReq(resp *response.Response) []*req.Request {
 	out := make([]*req.Request, 0)
-	_total := spider.FindKey(setting.PageTotal, resp.Req.Datas).Value
+	_total := spider.FindKey(ogconfig.PageTotal, resp.Req.Datas).Value
 	total, _ := strconv.Atoi(_total)
-	for _, each := range spider.FindKey(setting.StartURL, resp.Req.Datas).StartURL {
+	for _, each := range spider.FindKey(ogconfig.StartURL, resp.Req.Datas).StartURL {
 		if resp.URL == each {
 			for i := 1; i < total; i++ {
 				newPage := "page=" + strconv.Itoa(i)
@@ -69,11 +73,11 @@ func (self *Pipeline) toPageReq(resp *response.Response) []*req.Request {
 }
 
 func (self *Pipeline) saveResponse(resp *response.Response) {
-	reg := spider.FindKey(setting.SaveResponse, resp.Req.Datas).Value
+	reg := spider.FindKey(ogconfig.SaveResponse, resp.Req.Datas).Value
 	if resp.Match(reg, resp.URL) != "" {
 		rst := req.ToCrawlerRst(resp.Req)
 		rst["req_id"] = resp.Req.URL
-		tablename := spider.FindKey(setting.TableName, spider.Zhaotoubiao()).Value
+		tablename := spider.FindKey(ogconfig.TableName, spider.Zhaotoubiao()).Value
 		self.db.Save(tablename, rst)
 	}
 
@@ -114,5 +118,9 @@ func (self *Pipeline) process(resp *response.Response) []*req.Request {
 	request = append(request, self.toRequest(resp)...)
 	request = append(request, self.toPageReq(resp)...)
 	return request
+
+}
+
+func OpenSpider(setting map[string]string, scheduler chan *req.Request, db *db.PgSQL) {
 
 }

@@ -1,4 +1,4 @@
-package setting
+package ogconfig
 
 const (
 	NumGoroutine = 30
