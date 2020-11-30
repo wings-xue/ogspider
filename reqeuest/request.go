@@ -4,6 +4,7 @@ import (
 	ogconfig "og/const"
 	"og/hash"
 	"og/item"
+	"regexp"
 )
 
 const (
@@ -19,6 +20,7 @@ type Request struct {
 	UUID      string
 	URL       string
 	Host      string
+	Cookie    string
 	Download  string
 	Datas     []*item.Field
 	Status    string // waitting， scheduler， succeed， fail， retry
@@ -73,4 +75,12 @@ func ToRequest(fields []*item.Field) *Request {
 	request.Seed = false
 
 	return request
+}
+
+func (self *Request) MatchBool(reg string) bool {
+	if reg == "*" {
+		return true
+	}
+	r, _ := regexp.Compile(reg)
+	return r.FindString(self.URL) != ""
 }

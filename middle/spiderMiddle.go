@@ -5,10 +5,9 @@ import (
 	"strings"
 )
 
-// Middler 中间件接口
-type Middler interface {
-	ProcessSpiderIn(resp *response.Response) *response.Response
-	// ProcessSpiderOut(resp *response.Response, result interface{}) []*item.Field
+// SpiderMiddle 中间件接口, 用来检查response是否正确
+type SpiderMiddle interface {
+	Hook(resp *response.Response) *response.Response
 }
 
 // ContentErrorMiddleware 基于response对象内容处理错误
@@ -26,7 +25,7 @@ func (err ContentErrorMiddleware) NewContentError(msg string) ContentErrorMiddle
 }
 
 // ProcessSpiderIn 基于关键词的结果处理
-func (err ContentErrorMiddleware) ProcessSpiderIn(resp *response.Response) *response.Response {
+func (err ContentErrorMiddleware) Hook(resp *response.Response) *response.Response {
 	if strings.Contains(resp.Page, err.Msg) {
 		resp.StatusCode = err.Code
 	}

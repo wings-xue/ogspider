@@ -7,27 +7,28 @@ import (
 	"og/middle"
 	req "og/reqeuest"
 	"og/response"
+	"og/setting"
 )
 
 // OGSpider 爬虫接口
-type OGSpider interface {
-	StartRequest() []*req.Request
-	Parse(resp *response.Response, r *req.Request) []*req.Request
-	CreateTable(*db.PgSQL)
-	CheckSpider()
-}
+// type OGSpider interface {
+// 	StartRequest() []*req.Request
+// 	Parse(resp *response.Response, r *req.Request) []*req.Request
+// 	CreateTable(*db.PgSQL)
+// 	CheckSpider()
+// }
 
 // BaseSpier 基础的爬虫配置
 type BaseSpider struct {
-	Host       string
-	Fields     []*item.Field
-	StartURL   []string
-	Name       string
-	Middleware []middle.Middler
+	Host     string
+	Fields   []*item.Field
+	StartURL []string
+	Name     string
+	Setting  setting.CralwerSet
 }
 
-func SpiderMiddleware() map[string]middle.Middler {
-	out := make(map[string]middle.Middler)
+func SpiderMiddleware() map[string]middle.SpiderMiddle {
+	out := make(map[string]middle.SpiderMiddle)
 	out["ContentErrorMiddleware"] = middle.ContentErrorMiddleware{}
 	return out
 }
@@ -54,13 +55,13 @@ func (spider *BaseSpider) CheckSpider() {
 	}
 }
 
-func (spider *BaseSpider) SetStartURL(host string) *BaseSpider {
-	spider.Host = host
+func (spider *BaseSpider) SetStartURL(startURL []string) *BaseSpider {
+	spider.StartURL = startURL
 	return spider
 }
 
 func (spider *BaseSpider) SetStartURLFunc(host string) *BaseSpider {
-	spider.Host = host
+
 	return spider
 }
 
@@ -80,7 +81,7 @@ func (spider *BaseSpider) SetSetting(field string) *BaseSpider {
 }
 
 func (spider *BaseSpider) SetDownloadMiddleware(field []*item.Field) *BaseSpider {
-	spider.Fields = field
+
 	return spider
 }
 

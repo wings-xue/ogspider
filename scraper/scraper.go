@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"og/db"
+	"og/middle"
 	req "og/reqeuest"
 	"og/response"
 	"og/setting"
@@ -9,55 +10,57 @@ import (
 )
 
 type Scrape struct {
-	Spiders   []spider.OGSpider
-	pipeliner chan *response.Response
-	scheduler chan *req.Request
-	Setting   setting.CralwerSet
+	Spiders   []*spider.BaseSpider
+	Pipeliner chan *response.Response
+	Scheduler chan *req.Request
+	// 所有的爬虫经过的配置
+	Setting setting.CralwerSet
+	db      *db.PgSQL
 }
 
 // 注册爬虫
-func (scrape *Scrape) Register(spider ...spider.OGSpider) {
-	// scrape := make(chan *response.Response)
+func (scrape *Scrape) Register(spider ...*spider.BaseSpider) {
+	// 1. spider添加到scrape
+	scrape.Spiders = append(scrape.Spiders, spider...)
 
+	// 2. setting
+	crawlSet := setting.CralwerSet{
+		SpiderloadMiddleware: map[string][]middle.SpiderMiddle{},
+		DownloadMiddleware:   map[string][]middle.DownloadMiddle{},
+	}
+	for _, s := range spider {
+		for key, val := range s.Setting.SpiderloadMiddleware {
+			crawlSet.SpiderloadMiddleware[key] = val
+		}
+	}
+
+	for _, s := range spider {
+		for key, val := range s.Setting.DownloadMiddleware {
+			crawlSet.DownloadMiddleware[key] = val
+		}
+	}
+	for _, s := range spider {
+		for key, val := range s.Setting.SpiderParse {
+			crawlSet.SpiderParse[key] = val
+		}
+	}
 }
 
-func New(pipeliner chan *response.Response, scheduler chan *req.Request) *Scrape {
-	return &Scrape{}
+func New(db *db.PgSQL, pipeliner chan *response.Response, scheduler chan *req.Request) *Scrape {
+	return &Scrape{
+		db:        db,
+		Pipeliner: pipeliner,
+		Scheduler: scheduler,
+	}
 }
-
-// 注册出口chan
-func (scrape *Scrape) SetPipeliner(pipeliner chan *response.Response) {
-	// scrape := make(chan *response.Response)
-	scrape.pipeliner = pipeliner
-}
-
-func (scrape *Scrape) SetScheduler(scheduler chan *req.Request) {
-	// scrape := make(chan *response.Response)
-	scrape.scheduler = scheduler
-}
-
-// func (scrape *Scrape) OpenSpider(db *db.PgSQL) {
-// 	for _, spider := range scrape.spiders {
-// 		spider.CheckSpider()
-// 		spider.CreateTable(db)
-// 		request := spider.StartRequest()
-// 		log.Printf("[spider] init spider :%d", len(request))
-// 		for _, r := range request {
-// 			db.Update(r, true)
-// 			scrape.scheduler <- r
-// 		}
-
-// 	}
-
-// }
 
 func OpenSpider(
 	pipeliner chan *response.Response,
 	scheduler chan *req.Request,
 	db *db.PgSQL,
-	spider ...spider.OGSpider) *Scrape {
+	spider ...*spider.BaseSpider) *Scrape {
 
-	s := New(pipeliner, scheduler)
+	s := New(db, pipeliner, scheduler)
 	if len(spider) == 0 {
 		panic("请确定是否配置爬虫")
 	}
@@ -67,13 +70,94 @@ func OpenSpider(
 		spider.CheckSpider()
 		spider.CreateTable(db)
 		for _, startReq := range spider.StartRequest() {
-			scheduler <- startReq
+			go func() {
+				scheduler <- startReq
+			}()
 		}
 	}
-
-	return &Scrape{}
+	return s
 }
 
-func (scrape *Scrape) Process() {
+func (scrape *Scrape) ProcessMiddle(resp *response.Response) {
+	for key, middleware := range scrape.Setting.SpiderloadMiddleware {
+		if resp.MatchBool(key) {
+			for _, hook := range middleware {
+				resp = hook.Hook(resp)
+			}
+		}
+	}
+}
+
+func (scrape *Scrape) ProcessParse(resp *response.Response) []*req.Request {
+	out := make([]*req.Request, 0)
+	for key, parses := range scrape.Setting.SpiderParse {
+		if resp.MatchBool(key) {
+			for _, hook := range parses {
+				out = append(out, hook.Hook(resp)...)
+			}
+		}
+	}
+	return out
+}
+
+func (scrape *Scrape) handleReq(resp *response.Response) *req.Request {
+	if resp.StatusCode == 200 {
+		resp.Req.Status = req.StatusSuc
+	} else {
+		if resp.Req.Retry == 6 {
+			resp.Req.Status = req.StatusFail
+		} else {
+			resp.Req.Status = req.StatusRetry
+			resp.Req.Retry = 1 + resp.Req.Retry
+		}
+	}
+	return resp.Req
+}
+
+func (scrape *Scrape) saveReq(req *req.Request) {
+	if req.Seed {
+		scrape.db.MustUpdate(*req, true)
+	} else {
+		scrape.db.MustUpdate(*req, false)
+	}
+}
+
+func (scrape *Scrape) sendReq(r *req.Request) {
+	scrape.Scheduler <- r
+	scrape.saveReq(r)
+}
+
+func (scrape *Scrape) sendResp(resp *response.Response) {
+	scrape.Pipeliner <- resp
+}
+
+func (scrape *Scrape) process(resp *response.Response) []*req.Request {
+	// 1. baseprocess
+	// 2. parse
+	request := make([]*req.Request, 0)
+	// 解析response
+	request = append(request, resp.Extract()...)
+	request = append(request, scrape.ProcessParse(resp)...)
+
+	return request
+
+}
+
+func (scrape *Scrape) Process(resp *response.Response) {
+	scrape.ProcessMiddle(resp)
+	if resp.StatusCode != 200 {
+		r := scrape.handleReq(resp)
+		scrape.sendReq(r)
+		return
+	}
+
+	// 1. 解析中（1. responsn->request 2. new page）
+	request := scrape.process(resp)
+	resp.NewReq = request
+	scrape.sendResp(resp)
+	// 1. 经过spidermiddle 过滤response
+	// 2. 处理response
+	// 3. 如果response成功，通过parse解析函数，response传入pipeline
+	// 1. 如果response失败，初始失败的原始数据扔给scheduler
 
 }

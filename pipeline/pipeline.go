@@ -6,6 +6,7 @@ import (
 	"og/db"
 	req "og/reqeuest"
 	"og/response"
+	"og/setting"
 	"og/spider"
 	"strconv"
 	"strings"
@@ -13,23 +14,23 @@ import (
 
 func (self *Pipeline) Process(resp *response.Response) {
 	log.Printf("[pipeline] %s status code : %d\n", resp.Req.URL, resp.StatusCode)
-	if resp.StatusCode != 200 {
-		r := self.handleReq(resp)
-		self.sendReq(r)
-		return
-	}
-	// 1. 解析中（1. responsn->request 2. new page）
-	request := self.process(resp)
+	// if resp.StatusCode != 200 {
+	// 	r := self.handleReq(resp)
+	// 	self.sendReq(r)
+	// 	return
+	// }
+	// // 1. 解析中（1. responsn->request 2. new page）
+	// request := self.process(resp)
 	// 2. new request -> chan
-	for _, r := range request {
+	for _, r := range resp.NewReq {
 		self.sendReq(r)
 		// fmt.Println(r)
 	}
 	// 3. save Crawler RST
 	self.saveResponse(resp)
 	// 4. handler old request: old -> chan ; save old
-	r := self.handleReq(resp)
-	self.sendReq(r)
+	// r := self.handleReq(resp)
+	self.sendReq(resp.Req)
 }
 
 type Pipeline struct {
@@ -121,6 +122,6 @@ func (self *Pipeline) process(resp *response.Response) []*req.Request {
 
 }
 
-func OpenSpider(setting map[string]string, scheduler chan *req.Request, db *db.PgSQL) {
-
+func OpenSpider(setting setting.CralwerSet, scheduler chan *req.Request, db *db.PgSQL) *Pipeline {
+	return &Pipeline{}
 }

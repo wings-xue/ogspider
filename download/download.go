@@ -5,8 +5,8 @@ import (
 	"log"
 	req "og/reqeuest"
 	"og/response"
+	"og/setting"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -35,6 +35,7 @@ type Download struct {
 	browser  *rod.Browser
 	mx       sync.Mutex
 	Headless bool
+	Setting  setting.CralwerSet
 }
 
 const (
@@ -102,11 +103,21 @@ func (self *Download) Require() {
 	self.browser.Page(proto.TargetCreateTarget{URL: ""})
 }
 
+func (self *Download) ProcessMiddle(ctx context.Context, r *req.Request) {
+	for key, middleware := range self.Setting.DownloadMiddleware {
+		if r.MatchBool(key) {
+			for _, hook := range middleware {
+				r = hook.Hook(r)
+			}
+		}
+	}
+}
+
 func (self *Download) download(ctx context.Context, r *req.Request) *response.Response {
 	log.Printf("[Download] fetcher url: %s, retry: %d\n", r.URL, r.Retry)
 	// 开启headless
 	self.SetHeadless(true)
-
+	self.ProcessMiddle(ctx, r)
 	resp := self.pageDownload(ctx, r)
 	return resp
 
@@ -162,27 +173,23 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 	}
 
 	resp.Page = s
-	// fmt.Println(resp.Page)
-	resp.StatusCode = ErrorPass(s)
+
 	return resp
 
 }
 
-func ErrorPass(html string) int {
-	if code := ErrorAccessBlock(html); code != 200 {
-		return code
+// func ErrorAccessBlock(html string) int {
+// 	substr := "很抱歉，由于您访问的URL有可能对网站造成安全威胁，您的访问被阻断"
+// 	if strings.Contains(html, substr) {
+// 		return 405
+// 	}
+// 	return 200
+// }
+
+func OpenSpider(setting setting.CralwerSet, scraper chan *response.Response) *Download {
+	return &Download{
+		scraper:  scraper,
+		Headless: true,
+		Setting:  setting,
 	}
-	return 200
-}
-
-func ErrorAccessBlock(html string) int {
-	substr := "很抱歉，由于您访问的URL有可能对网站造成安全威胁，您的访问被阻断"
-	if strings.Contains(html, substr) {
-		return 405
-	}
-	return 200
-}
-
-func OpenSpider(setting map[string]string, scraper chan *response.Response) {
-
 }

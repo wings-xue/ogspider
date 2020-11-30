@@ -18,13 +18,16 @@ type Response struct {
 	StatusCode int
 	URL        string
 	Page       string
+	NewReq     []*req.Request
 }
 
-func NewFail(req *req.Request) *Response {
+func NewFail(r *req.Request) *Response {
+	newReq := make([]*req.Request, 0)
 	return &Response{
-		Req:        req,
-		URL:        req.URL,
+		Req:        r,
+		URL:        r.URL,
 		StatusCode: 500,
+		NewReq:     newReq,
 	}
 }
 
@@ -91,6 +94,14 @@ func (self *Response) Match(reg string, s string) string {
 	}
 	r, _ := regexp.Compile(reg)
 	return r.FindString(s)
+}
+
+func (self *Response) MatchBool(reg string) bool {
+	if reg == "*" {
+		return true
+	}
+	r, _ := regexp.Compile(reg)
+	return r.FindString(self.URL) != ""
 }
 
 func (self *Response) ExtractRow(field []*item.Field) []*item.Field {

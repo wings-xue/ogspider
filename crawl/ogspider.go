@@ -13,7 +13,7 @@ import (
 )
 
 // Crawl 爬虫情况通过数据库进行缓存, 每次基于缓存进行调用
-func Crawl(spider ...spider.OGSpider) {
+func Crawl(spider ...*spider.BaseSpider) {
 
 	database := db.New()
 
@@ -23,14 +23,16 @@ func Crawl(spider ...spider.OGSpider) {
 	pipeliner := make(chan *response.Response)
 
 	scrape := scrape.OpenSpider(pipeliner, scheduler, database, spider...)
-	schedule.OpenSpider(scrape.Setting.Schedule, downloader, database)
-	pipeline.OpenSpider(scrape.Setting.Pipeline, scheduler, database)
-	download.OpenSpider(scrape.Setting.Download, scraper)
+	schedule := schedule.OpenSpider(downloader, database)
+	pipeline := pipeline.OpenSpider(scrape.Setting, scheduler, database)
+	dwonload := download.OpenSpider(scrape.Setting, scraper)
+	engine := engine.OpenSpider(scheduler, downloader, pipeliner, scraper)
 
-	engine.RunForever()
+	go schedule.LoopDispatch()
+	engine.RunForever(schedule, dwonload, pipeline, scrape)
 }
 
 // CrawlRPC 基于RPC调用，不影响之前爬虫爬取
-func CrawlRPC(spider ...spider.OGSpider) {
+func CrawlRPC(spider ...spider.BaseSpider) {
 	// schedule.OpenSpiderRPC()
 }

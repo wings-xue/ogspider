@@ -9,13 +9,13 @@ func main() {
 	og.Crawl(
 		// 1. 创建BaseSpider对象
 		// 2. 加载Name
-		spider.SpiderNew("zhaotoubiao").
+		spider.SpiderNew(spider.ZTBName).
 			// 3. 加载Host
-			SetHost("").
+			SetHost(spider.ZTBHost).
 			// 4. 加载Fields
-			SetFields(spider.Zhaotoubiao()).
+			SetFields(spider.ZTBField).
 			// 5. 加载StartURL
-			SetStartURL("").
+			SetStartURL(spider.ZTBStartURL).
 			SetStartURLFunc("").
 			// 6. 加载Setting
 			SetSetting("").

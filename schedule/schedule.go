@@ -58,7 +58,7 @@ func New(downloader chan *req.Request) *Schedule {
 	}
 }
 
-func (self *Schedule) Dispatch() {
+func (self *Schedule) LoopDispatch() {
 	for {
 
 		if self.manager.Len() > 0 && self.WorkLen() < 20 {
@@ -70,6 +70,13 @@ func (self *Schedule) Dispatch() {
 	}
 }
 
-func OpenSpider(setting map[string]string, downloader chan *req.Request, db *db.PgSQL) {
+func OpenSpider(downloader chan *req.Request, db *db.PgSQL) *Schedule {
+	manager := context.New()
+	filter := filter.New(filter.BLOOMSIZE)
 
+	return &Schedule{
+		downloader: downloader,
+		manager:    manager,
+		filter:     filter,
+	}
 }
