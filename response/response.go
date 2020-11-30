@@ -148,10 +148,9 @@ func (self *Response) ToRequest(url string) *req.Request {
 	url = self.ParseUrl(url, item.FindKey(ogconfig.Host, self.Req.Datas).Value)
 	request := req.New(url)
 	request.Datas = self.Req.Datas
-	request.Host = item.FindKey(ogconfig.Host, self.Req.Datas).Value
+	request.Host = self.Req.Host
 	request.Status = req.StatusWait
 	request.UUID = hash.Hash(url)
-	request.Download = item.FindKey(ogconfig.Download, self.Req.Datas).Value
 	request.Retry = 1
 	request.Seed = false
 

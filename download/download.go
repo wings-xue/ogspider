@@ -78,7 +78,7 @@ func (self *Download) Require() {
 	if self.browser == nil {
 		if !self.Headless {
 			url, err := launcher.New().
-				Proxy("192.168.100.210:3128").
+				// Proxy("192.168.100.210:3128").
 				Bin(Chrome).
 				Headless(self.Headless).
 				Devtools(true).
@@ -90,7 +90,7 @@ func (self *Download) Require() {
 			self.browser = b
 		} else {
 			url, err := launcher.New().
-				Proxy("192.168.100.210:3128").
+				// Proxy("192.168.100.210:3128").
 				Bin(Chrome).
 				Launch()
 			if err != nil {
@@ -173,7 +173,7 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 	}
 
 	resp.Page = s
-
+	resp.StatusCode = 200
 	return resp
 
 }

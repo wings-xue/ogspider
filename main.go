@@ -19,7 +19,8 @@ func main() {
 			SetStartURLFunc("").
 			// 6. 加载Setting
 			SetSetting("").
-			SetDownloadMiddleware(spider.Zhaotoubiao()),
+			SetDownloadMiddleware().
+			SetPipelineSet(),
 	)
 
 }

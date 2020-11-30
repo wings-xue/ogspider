@@ -1,6 +1,8 @@
 package spider
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	ogconfig "og/const"
 	"og/db"
 	"og/item"
@@ -53,6 +55,9 @@ func (spider *BaseSpider) CheckSpider() {
 	if spider.StartURL == nil || len(spider.StartURL) == 0 {
 		panic(spider.Name + "初始url没有配置")
 	}
+	if spider.Setting.PipelineSetting == nil {
+		panic(spider.Name + "没有指定存入的表名")
+	}
 }
 
 func (spider *BaseSpider) SetStartURL(startURL []string) *BaseSpider {
@@ -80,7 +85,12 @@ func (spider *BaseSpider) SetSetting(field string) *BaseSpider {
 	return spider
 }
 
-func (spider *BaseSpider) SetDownloadMiddleware(field []*item.Field) *BaseSpider {
+func (spider *BaseSpider) SetDownloadMiddleware() *BaseSpider {
+
+	return spider
+}
+
+func (spider *BaseSpider) SetPipelineSet() *BaseSpider {
 
 	return spider
 }
@@ -112,6 +122,21 @@ func (spider *BaseSpider) SetSpiderMiddlewareFunc(field []*item.Field) *BaseSpid
 
 func (spider *BaseSpider) Parse(resp *response.Response, r *req.Request) []*req.Request {
 	return []*req.Request{}
+}
+
+func FindKey(key string, field []*item.Field) *item.Field {
+	for _, f := range field {
+		if f.Name == key {
+			return f
+		}
+	}
+	return &item.Field{}
+}
+
+func HashK(s string) string {
+	hash := md5.Sum([]byte(s))
+	return hex.EncodeToString(hash[:])
+
 }
 
 // StartRequest 入口函数

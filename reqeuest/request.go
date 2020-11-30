@@ -5,6 +5,7 @@ import (
 	"og/hash"
 	"og/item"
 	"regexp"
+	"time"
 )
 
 const (
@@ -16,18 +17,20 @@ const (
 )
 
 type Request struct {
-	tableName struct{} `pg:"job,alias:job,discard_unknown_columns"`
-	UUID      string
-	URL       string
-	Host      string
-	Cookie    string
-	Download  string
-	Datas     []*item.Field
-	Status    string // waitting， scheduler， succeed， fail， retry
-	Retry     int
-	Log       string
-	Seed      bool `pg:"-"` // 是否做为种子爬取新的request对象
-
+	tableName  struct{} `pg:"job,alias:job,discard_unknown_columns"`
+	UUID       string
+	URL        string
+	Host       string
+	Cookie     string
+	Datas      []*item.Field
+	Status     string // waitting， scheduler， succeed， fail， retry
+	Retry      int
+	Log        string
+	Seed       bool      `pg:"-"` // 是否做为种子爬取新的request对象
+	InsertDate time.Time `pg:"insert_date,alias:insert_date"`
+	UpdateDate time.Time `pg:"update_date,alias:update_date"`
+	// 生命周期
+	FreshLife int `pg:"fresh_life,alias:fresh_life"`
 }
 
 // New 创建一个Request对象, 可以传入任何对象
@@ -70,7 +73,7 @@ func ToRequest(fields []*item.Field) *Request {
 	request.Host = item.FindKey(ogconfig.Host, fields).Value
 	request.Status = StatusWait
 	request.UUID = hash.Hash(url)
-	request.Download = item.FindKey(ogconfig.Download, fields).Value
+
 	request.Retry = 1
 	request.Seed = false
 
