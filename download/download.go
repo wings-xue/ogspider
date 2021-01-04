@@ -6,7 +6,6 @@ import (
 	req "og/reqeuest"
 	"og/response"
 	"og/setting"
-	"os"
 	"sync"
 	"time"
 
@@ -38,13 +37,13 @@ type Download struct {
 	Setting  setting.CrawlerSet
 }
 
-const (
-	Chrome = `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
-)
+// const (
+// 	Chrome = `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
+// )
 
-func addENV() {
-	os.Setenv("rob", "bin="+Chrome)
-}
+// func addENV() {
+// 	os.Setenv("rob", "bin="+Chrome)
+// }
 
 func New(scraper chan *response.Response) *Download {
 
@@ -78,8 +77,8 @@ func (self *Download) Require() {
 	if self.browser == nil {
 		if !self.Headless {
 			url, err := launcher.New().
-				Proxy("192.168.100.210:3128").
-				Bin(Chrome).
+				// Proxy("192.168.100.210:3128").
+				// Bin(Chrome).
 				Headless(self.Headless).
 				Devtools(true).
 				Launch()
@@ -90,8 +89,8 @@ func (self *Download) Require() {
 			self.browser = b
 		} else {
 			url, err := launcher.New().
-				Proxy("192.168.100.210:3128").
-				Bin(Chrome).
+				// Proxy("192.168.100.210:3128").
+				// Bin(Chrome).
 				Launch()
 			if err != nil {
 				log.Panic(err)
