@@ -1,6 +1,7 @@
 package og
 
 import (
+	"log"
 	"og/db"
 	"og/download"
 	"og/engine"
@@ -10,7 +11,24 @@ import (
 	"og/schedule"
 	scrape "og/scraper"
 	"og/spider"
+	"time"
 )
+
+func CreateReqTable() {
+
+}
+
+// LoopDispatchDB 自动从数据库提取失效的种子
+func LoopDispatchDB(db *db.PgSQL, scheduler chan *req.Request) {
+	for {
+		for _, r := range db.SelectExpired() {
+			log.Printf("从数据库获取请求")
+			r.AliveNum = r.AliveNum + 1
+			scheduler <- r
+		}
+		time.Sleep(time.Second * 60)
+	}
+}
 
 // Crawl 爬虫情况通过数据库进行缓存, 每次基于缓存进行调用
 func Crawl(spider ...*spider.BaseSpider) {
@@ -28,6 +46,7 @@ func Crawl(spider ...*spider.BaseSpider) {
 	dwonload := download.OpenSpider(scrape.Setting, scraper)
 	engine := engine.OpenSpider(scheduler, downloader, pipeliner, scraper)
 
+	go LoopDispatchDB(database, scheduler)
 	go schedule.LoopDispatch()
 	engine.RunForever(schedule, dwonload, pipeline, scrape)
 }

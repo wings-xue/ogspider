@@ -59,7 +59,7 @@ func TestDownload_ProcessMiddle(t *testing.T) {
 	m := make(map[string][]middle.DownloadMiddle)
 	m["*"] = []middle.DownloadMiddle{m1, m2, m3}
 	scrape := make(chan *response.Response)
-	d := OpenSpider(setting.CralwerSet{
+	d := OpenSpider(setting.CrawlerSet{
 		DownloadMiddleware: m,
 	}, scrape)
 

@@ -9,6 +9,7 @@ import (
 	req "og/reqeuest"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -138,14 +139,12 @@ func (self *Response) ExtractRows(field []*item.Field) [][]*item.Field {
 	return out
 }
 
-func (self *Response) newHeader() {}
-func (self *Response) newBody()   {}
 func (self *Response) newURL(oldURL string) string {
 	return ""
 }
 
 func (self *Response) ToRequest(url string) *req.Request {
-	url = self.ParseUrl(url, item.FindKey(ogconfig.Host, self.Req.Datas).Value)
+	url = self.ParseUrl(url, self.Req.Host)
 	request := req.New(url)
 	request.Datas = self.Req.Datas
 	request.Host = self.Req.Host
@@ -153,20 +152,10 @@ func (self *Response) ToRequest(url string) *req.Request {
 	request.UUID = hash.Hash(url)
 	request.Retry = 1
 	request.Seed = false
-
+	request.UpdateDate = time.Now()
+	request.InsertDate = time.Now()
+	request.FreshLife = self.Req.FreshLife
 	return request
-}
-
-func (self *Response) ToPageReq(page int) []*req.Request {
-	// 1. 生成header
-	// 2. 生成data
-	// 3. 生成url
-	out := make([]*req.Request, 0)
-	for i := 0; i < page; i++ {
-		url := self.newURL(self.Req.URL)
-		out = append(out, self.ToRequest(url))
-	}
-	return out
 }
 
 func (self *Response) ParseUrl(s, host string) string {

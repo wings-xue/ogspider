@@ -8,25 +8,18 @@ import (
 	"og/item"
 	"og/middle"
 	req "og/reqeuest"
-	"og/response"
 	"og/setting"
+	"time"
 )
-
-// OGSpider 爬虫接口
-// type OGSpider interface {
-// 	StartRequest() []*req.Request
-// 	Parse(resp *response.Response, r *req.Request) []*req.Request
-// 	CreateTable(*db.PgSQL)
-// 	CheckSpider()
-// }
 
 // BaseSpier 基础的爬虫配置
 type BaseSpider struct {
-	Host     string
-	Fields   []*item.Field
-	StartURL []string
-	Name     string
-	Setting  setting.CralwerSet
+	Host      string
+	Fields    []*item.Field
+	StartURL  []string
+	Name      string
+	Setting   setting.CrawlerSet
+	StartFunc func() []*req.Request
 }
 
 func SpiderMiddleware() map[string]middle.SpiderMiddle {
@@ -65,8 +58,8 @@ func (spider *BaseSpider) SetStartURL(startURL []string) *BaseSpider {
 	return spider
 }
 
-func (spider *BaseSpider) SetStartURLFunc(host string) *BaseSpider {
-
+func (spider *BaseSpider) SetStartURLFunc(f func() []*req.Request) *BaseSpider {
+	spider.StartFunc = f
 	return spider
 }
 
@@ -80,48 +73,9 @@ func (spider *BaseSpider) SetFields(field []*item.Field) *BaseSpider {
 	return spider
 }
 
-func (spider *BaseSpider) SetSetting(field string) *BaseSpider {
-
+func (spider *BaseSpider) SetSetting(s setting.CrawlerSet) *BaseSpider {
+	spider.Setting = s
 	return spider
-}
-
-func (spider *BaseSpider) SetDownloadMiddleware() *BaseSpider {
-
-	return spider
-}
-
-func (spider *BaseSpider) SetPipelineSet() *BaseSpider {
-
-	return spider
-}
-
-func (spider *BaseSpider) SetDownloadMiddlewareFunc(field []*item.Field) *BaseSpider {
-	spider.Fields = field
-	return spider
-}
-
-func (spider *BaseSpider) SetPipelineMiddlewareFunc(field []*item.Field) *BaseSpider {
-	spider.Fields = field
-	return spider
-}
-
-func (spider *BaseSpider) SetPipelineMiddleware(field []*item.Field) *BaseSpider {
-	spider.Fields = field
-	return spider
-}
-
-func (spider *BaseSpider) SetSpiderMiddleware(field []*item.Field) *BaseSpider {
-	spider.Fields = field
-	return spider
-}
-
-func (spider *BaseSpider) SetSpiderMiddlewareFunc(field []*item.Field) *BaseSpider {
-	spider.Fields = field
-	return spider
-}
-
-func (spider *BaseSpider) Parse(resp *response.Response, r *req.Request) []*req.Request {
-	return []*req.Request{}
 }
 
 func FindKey(key string, field []*item.Field) *item.Field {
@@ -142,6 +96,9 @@ func HashK(s string) string {
 // StartRequest 入口函数
 func (spider *BaseSpider) StartRequest() []*req.Request {
 	out := make([]*req.Request, 0)
+	if spider.StartFunc != nil {
+		return spider.StartFunc()
+	}
 	for _, url := range spider.StartURL {
 		startReq := req.New(url)
 		startReq.Datas = spider.Fields
@@ -150,6 +107,10 @@ func (spider *BaseSpider) StartRequest() []*req.Request {
 		startReq.UUID = HashK(url)
 		startReq.Retry = 1
 		startReq.Seed = false
+		startReq.UpdateDate = time.Now()
+		startReq.InsertDate = time.Now()
+		startReq.FreshLife = 60 * 60 * 24
+		startReq.AliveNum = 0
 		out = append(out, startReq)
 	}
 	return out

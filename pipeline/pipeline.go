@@ -23,40 +23,21 @@ func (self *Pipeline) Process(resp *response.Response) {
 }
 
 type Pipeline struct {
-	scheduler       chan *req.Request
-	db              *db.PgSQL
-	PipelineSetting map[string]setting.PipelineSet
+	scheduler chan *req.Request
+	db        *db.PgSQL
+	Setting   setting.CrawlerSet
 }
 
-func New(scheduler chan *req.Request, db *db.PgSQL) *Pipeline {
+func New(setting setting.CrawlerSet, scheduler chan *req.Request, db *db.PgSQL) *Pipeline {
 	return &Pipeline{
 		scheduler: scheduler,
 		db:        db,
+		Setting:   setting,
 	}
 }
 
-// func (self *Pipeline) toPageReq(resp *response.Response) []*req.Request {
-// 	out := make([]*req.Request, 0)
-// 	_total := spider.FindKey(ogconfig.PageTotal, resp.Req.Datas).Value
-// 	total, _ := strconv.Atoi(_total)
-// 	for _, each := range spider.FindKey(ogconfig.StartURL, resp.Req.Datas).StartURL {
-// 		if resp.URL == each {
-// 			for i := 1; i < total; i++ {
-// 				newPage := "page=" + strconv.Itoa(i)
-// 				newURL := strings.Replace(each, "page=1", newPage, -1)
-// 				q := *resp.Req
-// 				q.URL = newURL
-// 				q.UUID = spider.HashK(newURL)
-// 				q.Seed = false
-// 				out = append(out, &q)
-// 			}
-// 		}
-// 	}
-// 	return out
-// }
-
 func (self *Pipeline) saveResponse(resp *response.Response) {
-	for key, pipelineSet := range self.PipelineSetting {
+	for key, pipelineSet := range self.Setting.PipelineSetting {
 		if resp.MatchBool(key) {
 			rst := req.ToCrawlerRst(resp.Req)
 			rst["req_id"] = resp.Req.URL
@@ -79,6 +60,6 @@ func (self *Pipeline) saveReq(req *req.Request) {
 	}
 }
 
-func OpenSpider(setting setting.CralwerSet, scheduler chan *req.Request, db *db.PgSQL) *Pipeline {
-	return New(scheduler, db)
+func OpenSpider(setting setting.CrawlerSet, scheduler chan *req.Request, db *db.PgSQL) *Pipeline {
+	return New(setting, scheduler, db)
 }

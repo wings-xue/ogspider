@@ -35,7 +35,7 @@ type Download struct {
 	browser  *rod.Browser
 	mx       sync.Mutex
 	Headless bool
-	Setting  setting.CralwerSet
+	Setting  setting.CrawlerSet
 }
 
 const (
@@ -78,7 +78,7 @@ func (self *Download) Require() {
 	if self.browser == nil {
 		if !self.Headless {
 			url, err := launcher.New().
-				// Proxy("192.168.100.210:3128").
+				Proxy("192.168.100.210:3128").
 				Bin(Chrome).
 				Headless(self.Headless).
 				Devtools(true).
@@ -90,7 +90,7 @@ func (self *Download) Require() {
 			self.browser = b
 		} else {
 			url, err := launcher.New().
-				// Proxy("192.168.100.210:3128").
+				Proxy("192.168.100.210:3128").
 				Bin(Chrome).
 				Launch()
 			if err != nil {
@@ -186,7 +186,7 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 // 	return 200
 // }
 
-func OpenSpider(setting setting.CralwerSet, scraper chan *response.Response) *Download {
+func OpenSpider(setting setting.CrawlerSet, scraper chan *response.Response) *Download {
 	return &Download{
 		scraper:  scraper,
 		Headless: true,

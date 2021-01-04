@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/go-pg/pg/v10"
 )
@@ -38,6 +39,9 @@ func (self *PgSQL) Update(r *req.Request, upsert bool) error {
 			Set("datas=EXCLUDED.datas").
 			Set("status=EXCLUDED.status").
 			Set("retry=EXCLUDED.retry").
+			Set("update_date=EXCLUDED.update_date").
+			Set("insert_date=EXCLUDED.insert_date").
+			Set("fresh_life=EXCLUDED.fresh_life").
 			Insert()
 		if err != nil {
 			return err
@@ -76,6 +80,33 @@ func (self *PgSQL) Select(i int) []*req.Request {
 	var requests []*req.Request
 	self.Conn.Model(&requests).Limit(i).Select()
 	return requests
+}
+
+func (self *PgSQL) SelectExpired() []*req.Request {
+	var requests []*req.Request
+	self.Conn.Model(&requests).Where("update_date + concat(to_char(fresh_life, '9999999999999999999'), ' seconds')::INTERVAL<?0", time.Now()).Select()
+	return requests
+}
+
+func (self *PgSQL) GroupStatus() []struct {
+	Host        string
+	Status      string
+	StatusCount int
+} {
+	var requests []*req.Request
+	var res []struct {
+		Host        string
+		Status      string
+		StatusCount int
+	}
+	self.Conn.Model(&requests).
+		Column("host").
+		Column("status").
+		ColumnExpr("count(*) as status_count").
+		Group("host").
+		Group("status").
+		Select(&res)
+	return res
 }
 
 func (self *PgSQL) Close() {

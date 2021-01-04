@@ -2,11 +2,11 @@ package scrape
 
 import (
 	"og/db"
-	"og/middle"
 	req "og/reqeuest"
 	"og/response"
 	"og/setting"
 	"og/spider"
+	"time"
 )
 
 type Scrape struct {
@@ -14,7 +14,7 @@ type Scrape struct {
 	Pipeliner chan *response.Response
 	Scheduler chan *req.Request
 	// 所有的爬虫经过的配置
-	Setting setting.CralwerSet
+	Setting setting.CrawlerSet
 	db      *db.PgSQL
 }
 
@@ -24,10 +24,7 @@ func (scrape *Scrape) Register(spider ...*spider.BaseSpider) {
 	scrape.Spiders = append(scrape.Spiders, spider...)
 
 	// 2. setting
-	crawlSet := setting.CralwerSet{
-		SpiderloadMiddleware: map[string][]middle.SpiderMiddle{},
-		DownloadMiddleware:   map[string][]middle.DownloadMiddle{},
-	}
+	crawlSet := scrape.Setting
 	for _, s := range spider {
 		for key, val := range s.Setting.SpiderloadMiddleware {
 			crawlSet.SpiderloadMiddleware[key] = val
@@ -44,6 +41,11 @@ func (scrape *Scrape) Register(spider ...*spider.BaseSpider) {
 			crawlSet.SpiderParse[key] = val
 		}
 	}
+	for _, s := range spider {
+		for key, val := range s.Setting.PipelineSetting {
+			crawlSet.PipelineSetting[key] = val
+		}
+	}
 }
 
 func New(db *db.PgSQL, pipeliner chan *response.Response, scheduler chan *req.Request) *Scrape {
@@ -51,6 +53,7 @@ func New(db *db.PgSQL, pipeliner chan *response.Response, scheduler chan *req.Re
 		db:        db,
 		Pipeliner: pipeliner,
 		Scheduler: scheduler,
+		Setting:   setting.New(),
 	}
 }
 
@@ -70,9 +73,7 @@ func OpenSpider(
 		spider.CheckSpider()
 		spider.CreateTable(db)
 		for _, startReq := range spider.StartRequest() {
-			go func() {
-				scheduler <- startReq
-			}()
+			go s.sendReq(startReq)
 		}
 	}
 	return s
@@ -111,6 +112,7 @@ func (scrape *Scrape) handleReq(resp *response.Response) *req.Request {
 			resp.Req.Retry = 1 + resp.Req.Retry
 		}
 	}
+	resp.Req.UpdateDate = time.Now()
 	return resp.Req
 }
 
@@ -145,8 +147,8 @@ func (scrape *Scrape) process(resp *response.Response) []*req.Request {
 
 func (scrape *Scrape) Process(resp *response.Response) {
 	scrape.ProcessMiddle(resp)
+	r := scrape.handleReq(resp)
 	if resp.StatusCode != 200 {
-		r := scrape.handleReq(resp)
 		scrape.sendReq(r)
 		return
 	}

@@ -2,7 +2,6 @@ package req
 
 import (
 	ogconfig "og/const"
-	"og/hash"
 	"og/item"
 	"regexp"
 	"time"
@@ -26,6 +25,7 @@ type Request struct {
 	Status     string // waitting， scheduler， succeed， fail， retry
 	Retry      int
 	Log        string
+	AliveNum   int
 	Seed       bool      `pg:"-"` // 是否做为种子爬取新的request对象
 	InsertDate time.Time `pg:"insert_date,alias:insert_date"`
 	UpdateDate time.Time `pg:"update_date,alias:update_date"`
@@ -52,32 +52,6 @@ func ToCrawlerRst(request *Request) map[string]interface{} {
 	}
 	rst[ogconfig.CrawlerRstKey] = request.UUID
 	return rst
-}
-
-func ToTableSchema(tablename string, request *Request) string {
-
-	column := ""
-	for _, item := range request.Datas {
-		column += item.Name + " text,\n"
-	}
-	column += ogconfig.CrawlerRstKey + " text,\n"
-	return "create table if not exists " + tablename + "(" + column + " UNIQUE(req_id)) ;"
-
-}
-
-func ToRequest(fields []*item.Field) *Request {
-
-	url := item.FindKey(ogconfig.URLName, fields).Value
-	request := New(url)
-	request.Datas = fields
-	request.Host = item.FindKey(ogconfig.Host, fields).Value
-	request.Status = StatusWait
-	request.UUID = hash.Hash(url)
-
-	request.Retry = 1
-	request.Seed = false
-
-	return request
 }
 
 func (self *Request) MatchBool(reg string) bool {
