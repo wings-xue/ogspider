@@ -50,7 +50,7 @@ func New(scraper chan *response.Response) *Download {
 	// addENV()
 	return &Download{
 		scraper:  scraper,
-		Headless: true,
+		Headless: false,
 	}
 }
 
@@ -79,6 +79,7 @@ func (self *Download) Require() {
 			url, err := launcher.New().
 				// Proxy("192.168.100.210:3128").
 				// Bin(Chrome).
+				Set("--no-sandbox").
 				Headless(self.Headless).
 				Devtools(true).
 				Launch()
@@ -91,6 +92,7 @@ func (self *Download) Require() {
 			url, err := launcher.New().
 				// Proxy("192.168.100.210:3128").
 				// Bin(Chrome).
+				Set("--no-sandbox").
 				Launch()
 			if err != nil {
 				log.Panic(err)
@@ -99,6 +101,7 @@ func (self *Download) Require() {
 			self.browser = b
 		}
 	}
+
 	self.browser.Page(proto.TargetCreateTarget{URL: ""})
 }
 
