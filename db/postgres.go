@@ -86,7 +86,7 @@ func (self *PgSQL) Select(i int) []*req.Request {
 func (self *PgSQL) SelectExpired() []*req.Request {
 	var requests []*req.Request
 
-	self.Conn.Model(&requests).Where("update_date + concat(to_char(fresh_life, '9999999999999999999'), ' seconds')::INTERVAL>?0", time.Now()).Select()
+	self.Conn.Model(&requests).Where("update_date + concat(to_char(fresh_life, '9999999999999999999'), ' seconds')::INTERVAL<?0", time.Now()).Select()
 	return requests
 }
 
