@@ -19,7 +19,7 @@ type PgSQL struct {
 
 func New() *PgSQL {
 	// opt, err := pg.ParseURL("postgres://postgres:88888888@192.168.100.121:5432/postgres?sslmode=disable")
-	opt, err := pg.ParseURL("postgres://postgres@172.17.0.5:5432/postgres?sslmode=disable")
+	opt, err := pg.ParseURL("postgres://postgres:88888888@172.17.0.5:5432/postgres?sslmode=disable")
 	if err != nil {
 		panic(err)
 	}
