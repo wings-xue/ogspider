@@ -1,7 +1,21 @@
 -- Table: public.job
 
 -- DROP TABLE public.job;
+-- SEQUENCE: public.job_id_seq
 
+-- DROP SEQUENCE public.job_id_seq;
+
+CREATE SEQUENCE public.job_id_seq
+    INCREMENT 1
+    START 1
+    MINVALUE 1
+    MAXVALUE 2147483647
+    CACHE 1;
+
+ALTER SEQUENCE public.job_id_seq
+    OWNER TO postgres;
+
+    
 CREATE TABLE public.job
 (
     id integer NOT NULL DEFAULT nextval('job_id_seq'::regclass),
