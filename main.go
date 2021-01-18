@@ -17,7 +17,7 @@ var s = setting.CrawlerSet{
 	},
 	// SpiderloadMiddleware 处理代理失败
 	SpiderloadMiddleware: map[string][]middle.SpiderMiddle{
-		example.DetailURL: {middle.ContentErrorMiddleware{Code: 405, Msg: example.ErrorText}},
+		"*": {middle.ContentErrorMiddleware{Code: 405, Msg: example.ErrorText}},
 	},
 	SpiderParse: map[string][]middle.Parse{
 		example.ListURL: {example.Parse{}},
