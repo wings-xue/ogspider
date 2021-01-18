@@ -16,16 +16,16 @@ const (
 )
 
 type Request struct {
-	tableName  struct{} `pg:"job,alias:job,discard_unknown_columns"`
-	UUID       string
-	URL        string
-	Host       string
-	Cookie     string
-	Datas      []*item.Field
-	Status     string // waitting， scheduler， succeed， fail， retry
-	Retry      int
-	Log        string
-	AliveNum   int
+	tableName struct{} `pg:"job,alias:job,discard_unknown_columns"`
+	UUID      string
+	URL       string
+	Host      string
+	Cookie    string
+	Datas     []*item.Field
+	Status    string // waitting， scheduler， succeed， fail， retry
+	Retry     int
+	Log       string // 主要是网络错误
+
 	Seed       bool      `pg:"-"` // 是否做为种子爬取新的request对象
 	InsertDate time.Time `pg:"insert_date,alias:insert_date"`
 	UpdateDate time.Time `pg:"update_date,alias:update_date"`
