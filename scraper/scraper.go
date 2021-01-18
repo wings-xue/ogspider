@@ -149,6 +149,7 @@ func (scrape *Scrape) Process(resp *response.Response) {
 	scrape.ProcessMiddle(resp)
 	r := scrape.handleReq(resp)
 	if resp.StatusCode != 200 {
+		r.Log = resp.StatusMsg
 		scrape.sendReq(r)
 		return
 	}

@@ -39,7 +39,7 @@ func (self *Schedule) WorkLen() int {
 
 func (self *Schedule) Process(req *req.Request) {
 	// s.manager = append(s.manager, req)
-	if !self.filter.Contains(req.URL + strconv.Itoa(req.Retry) + strconv.Itoa(req.AliveNum)) {
+	if !self.filter.Contains(req.URL + strconv.Itoa(req.Retry) + req.UpdateDate.Format("2001-01-01 01:01:01")) {
 		self.manager.Push(req)
 	}
 	if req.Seed {

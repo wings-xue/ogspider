@@ -110,7 +110,7 @@ func (spider *BaseSpider) StartRequest() []*req.Request {
 		startReq.UpdateDate = time.Now()
 		startReq.InsertDate = time.Now()
 		startReq.FreshLife = 60 * 60 * 24
-		startReq.AliveNum = 0
+
 		out = append(out, startReq)
 	}
 	return out
