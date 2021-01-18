@@ -17,6 +17,7 @@ import (
 type Response struct {
 	Req        *req.Request
 	StatusCode int
+	StatusMsg  string
 	URL        string
 	Page       string
 	NewReq     []*req.Request
