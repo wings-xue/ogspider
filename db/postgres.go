@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	ogconfig "og/const"
 	req "og/reqeuest"
@@ -11,6 +12,18 @@ import (
 
 	"github.com/go-pg/pg/v10"
 )
+
+type dbLogger struct{}
+
+func (d dbLogger) BeforeQuery(c context.Context, q *pg.QueryEvent) (context.Context, error) {
+	return c, nil
+}
+
+func (d dbLogger) AfterQuery(c context.Context, q *pg.QueryEvent) error {
+	b, _ := q.FormattedQuery()
+	fmt.Println(string(b))
+	return nil
+}
 
 type PgSQL struct {
 	// db
@@ -43,6 +56,7 @@ func (self *PgSQL) Update(r *req.Request, upsert bool) error {
 			Set("update_date=EXCLUDED.update_date").
 			Set("insert_date=EXCLUDED.insert_date").
 			Set("fresh_life=EXCLUDED.fresh_life").
+			Set("log=EXCLUDED.log").
 			Insert()
 		if err != nil {
 			return err
@@ -65,6 +79,7 @@ func (self *PgSQL) Update(r *req.Request, upsert bool) error {
 // upsert == true ,存在更新，不存在插入
 // upser == false, 存在丢弃，不存在插入
 func (self *PgSQL) MustUpdate(r req.Request, upsert bool) {
+	// self.Conn.AddQueryHook(dbLogger{})
 	err := self.Update(&r, upsert)
 	if err != nil {
 

@@ -23,7 +23,7 @@ func LoopDispatchDB(db *db.PgSQL, scheduler chan *req.Request) {
 	for {
 		for _, r := range db.SelectExpired() {
 			log.Printf("从数据库获取请求")
-			r.AliveNum = r.AliveNum + 1
+
 			scheduler <- r
 		}
 		time.Sleep(time.Second * 60)

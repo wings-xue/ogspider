@@ -77,7 +77,7 @@ func (self *Download) Require() {
 	if self.browser == nil {
 		if !self.Headless {
 			url, err := launcher.New().
-				// Proxy("192.168.100.210:3128").
+				Proxy("127.0.0.1:28080").
 				// Bin(Chrome).
 				Set("--no-sandbox").
 				Headless(self.Headless).
@@ -90,7 +90,7 @@ func (self *Download) Require() {
 			self.browser = b
 		} else {
 			url, err := launcher.New().
-				// Proxy("192.168.100.210:3128").
+				Proxy("127.0.0.1:28080").
 				// Bin(Chrome).
 				Set("--no-sandbox").
 				Launch()
@@ -102,7 +102,10 @@ func (self *Download) Require() {
 		}
 	}
 
-	self.browser.Page(proto.TargetCreateTarget{URL: ""})
+	_, err := self.browser.Page(proto.TargetCreateTarget{URL: ""})
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 func (self *Download) ProcessMiddle(ctx context.Context, r *req.Request) {
@@ -157,10 +160,13 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 
 	wait := page.WaitEvent(&e)
 	navErr := page.Timeout(100 * time.Second).Navigate(r.URL)
-	wait()
-	page.WaitLoad()
-
 	if navErr != nil {
+		resp.StatusMsg = navErr.Error()
+		return resp
+	}
+	wait()
+	err = page.WaitLoad()
+	if err != nil {
 		return resp
 	}
 
