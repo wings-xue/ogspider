@@ -18,13 +18,19 @@ import (
 func (self *Download) Process(r *req.Request) {
 	ctx, _ := context.WithTimeout(context.Background(), 100*time.Second)
 	done := make(chan *response.Response)
+	// 开启headless
+
 	go func() {
+
 		done <- self.download(ctx, r)
+
 	}()
 	select {
 	case <-ctx.Done():
+
 		self.scraper <- response.NewFail(r)
 	case resp := <-done:
+
 		self.scraper <- resp
 	}
 }
@@ -50,7 +56,7 @@ func New(scraper chan *response.Response) *Download {
 	// addENV()
 	return &Download{
 		scraper:  scraper,
-		Headless: false,
+		Headless: setting.Headless,
 	}
 }
 
@@ -77,7 +83,7 @@ func (self *Download) Require() {
 	if self.browser == nil {
 		if !self.Headless {
 			url, err := launcher.New().
-				Proxy("127.0.0.1:28080").
+				// Proxy("127.0.0.1:28080").
 				// Bin(Chrome).
 				Set("--no-sandbox").
 				Headless(self.Headless).
@@ -90,7 +96,7 @@ func (self *Download) Require() {
 			self.browser = b
 		} else {
 			url, err := launcher.New().
-				Proxy("127.0.0.1:28080").
+				// Proxy("127.0.0.1:28080").
 				// Bin(Chrome).
 				Set("--no-sandbox").
 				Launch()
@@ -119,9 +125,8 @@ func (self *Download) ProcessMiddle(ctx context.Context, r *req.Request) {
 }
 
 func (self *Download) download(ctx context.Context, r *req.Request) *response.Response {
-	log.Printf("[Download] fetcher url: %s, retry: %d\n", r.URL, r.Retry)
-	// 开启headless
-	self.SetHeadless(true)
+	log.Printf("[Download] uuid: %s, fetcher url: %s, retry: %d\n", r.UUID, r.URL, r.Retry)
+
 	self.ProcessMiddle(ctx, r)
 	resp := self.pageDownload(ctx, r)
 	return resp
@@ -171,6 +176,7 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 	}
 
 	ele, err1 := page.Timeout(100 * time.Second).Element("html")
+
 	if err1 != nil {
 		resp.StatusCode = 501
 		return resp
@@ -194,10 +200,10 @@ func (self *Download) pageDownload(ctx context.Context, r *req.Request) *respons
 // 	return 200
 // }
 
-func OpenSpider(setting setting.CrawlerSet, scraper chan *response.Response) *Download {
+func OpenSpider(s setting.CrawlerSet, scraper chan *response.Response) *Download {
 	return &Download{
 		scraper:  scraper,
-		Headless: true,
-		Setting:  setting,
+		Headless: setting.Headless,
+		Setting:  s,
 	}
 }

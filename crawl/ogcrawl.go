@@ -1,7 +1,6 @@
 package og
 
 import (
-	"log"
 	"og/db"
 	"og/download"
 	"og/engine"
@@ -22,11 +21,12 @@ func CreateReqTable() {
 func LoopDispatchDB(db *db.PgSQL, scheduler chan *req.Request) {
 	for {
 		for _, r := range db.SelectExpired() {
-			log.Printf("从数据库获取请求")
-
+			// log.Printf("从数据库获取请求")
+			// 重新开始读取数据
+			r.Retry = 1
 			scheduler <- r
 		}
-		time.Sleep(time.Second * 60)
+		time.Sleep(time.Minute * 10)
 	}
 }
 
@@ -48,7 +48,9 @@ func Crawl(spider ...*spider.BaseSpider) {
 
 	go LoopDispatchDB(database, scheduler)
 	go schedule.LoopDispatch()
+	scrape.RunSpider(database)
 	engine.RunForever(schedule, dwonload, pipeline, scrape)
+
 }
 
 // CrawlRPC 基于RPC调用，不影响之前爬虫爬取

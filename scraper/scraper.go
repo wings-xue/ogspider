@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"log"
 	"og/db"
 	req "og/reqeuest"
 	"og/response"
@@ -69,14 +70,17 @@ func OpenSpider(
 	}
 	s.Register(spider...)
 
+	return s
+}
+
+func (s *Scrape) RunSpider(db *db.PgSQL) {
 	for _, spider := range s.Spiders {
 		spider.CheckSpider()
 		spider.CreateTable(db)
 		for _, startReq := range spider.StartRequest() {
-			go s.sendReq(startReq)
+			s.saveReq(startReq)
 		}
 	}
-	return s
 }
 
 func (scrape *Scrape) ProcessMiddle(resp *response.Response) {
@@ -105,28 +109,27 @@ func (scrape *Scrape) handleReq(resp *response.Response) *req.Request {
 	if resp.StatusCode == 200 {
 		resp.Req.Status = req.StatusSuc
 	} else {
-		if resp.Req.Retry == 6 {
+		if resp.Req.Retry == setting.Retry {
 			resp.Req.Status = req.StatusFail
 		} else {
 			resp.Req.Status = req.StatusRetry
 			resp.Req.Retry = 1 + resp.Req.Retry
 		}
 	}
+	// 更新updateDate
 	resp.Req.UpdateDate = time.Now()
 	return resp.Req
 }
 
 func (scrape *Scrape) saveReq(req *req.Request) {
-	if req.Seed {
-		scrape.db.MustUpdate(*req, true)
-	} else {
-		scrape.db.MustUpdate(*req, false)
-	}
+	scrape.db.MustUpdate(*req, req.Seed)
+
 }
 
 func (scrape *Scrape) sendReq(r *req.Request) {
-	scrape.Scheduler <- r
 	scrape.saveReq(r)
+	scrape.Scheduler <- r
+
 }
 
 func (scrape *Scrape) sendResp(resp *response.Response) {
@@ -148,6 +151,7 @@ func (scrape *Scrape) process(resp *response.Response) []*req.Request {
 func (scrape *Scrape) Process(resp *response.Response) {
 	scrape.ProcessMiddle(resp)
 	r := scrape.handleReq(resp)
+	log.Printf("[Scraper] uuid:%s, url: %s, code: %d, msg: %s\n", resp.Req.UUID, resp.URL, resp.StatusCode, resp.StatusMsg)
 	if resp.StatusCode != 200 {
 		r.Log = resp.StatusMsg
 		scrape.sendReq(r)

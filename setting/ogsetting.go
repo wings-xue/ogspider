@@ -2,6 +2,12 @@ package setting
 
 import "og/middle"
 
+// 基础配置
+const Retry int = 6
+const Headless bool = true
+const QueryConut int = 100
+
+// 填写配置
 type PipelineSet struct {
 	SaveTable string
 }

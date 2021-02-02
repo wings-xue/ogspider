@@ -3,8 +3,11 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
 	ogconfig "og/const"
 	req "og/reqeuest"
+	"og/setting"
+
 	"os"
 	"os/signal"
 	"syscall"
@@ -81,6 +84,7 @@ func (self *PgSQL) Update(r *req.Request, upsert bool) error {
 func (self *PgSQL) MustUpdate(r req.Request, upsert bool) {
 	// self.Conn.AddQueryHook(dbLogger{})
 	err := self.Update(&r, upsert)
+	log.Printf("[Postgres] uuid: %s, retry: %d, update_date: %s\n", r.UUID, r.Retry, r.UpdateDate)
 	if err != nil {
 
 		panic(err)
@@ -101,7 +105,7 @@ func (self *PgSQL) Select(i int) []*req.Request {
 func (self *PgSQL) SelectExpired() []*req.Request {
 	var requests []*req.Request
 
-	self.Conn.Model(&requests).Where("update_date + concat(to_char(fresh_life, '9999999999999999999'), ' seconds')::INTERVAL<?0", time.Now()).Select()
+	self.Conn.Model(&requests).Where("update_date + concat(to_char(fresh_life, '9999999999999999999'), ' seconds')::INTERVAL<?0", time.Now()).Order("update_date").Limit(setting.QueryConut).Select()
 	return requests
 }
 

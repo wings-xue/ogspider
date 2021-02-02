@@ -6,6 +6,7 @@ import (
 	"og/db"
 	"og/filter"
 	req "og/reqeuest"
+	"og/setting"
 	"strconv"
 	"sync"
 )
@@ -19,16 +20,21 @@ type Schedule struct {
 	mu         sync.Mutex
 }
 
-func (self *Schedule) Minus() {
+func (self *Schedule) Minus(req *req.Request) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	self.WorkNum--
+
+	if req.Seed {
+		self.WorkNum--
+	}
+
 }
 
-func (self *Schedule) Inc() {
+func (self *Schedule) Inc(req *req.Request) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	self.WorkNum++
+	req.Seed = true
 }
 
 func (self *Schedule) WorkLen() int {
@@ -39,13 +45,16 @@ func (self *Schedule) WorkLen() int {
 
 func (self *Schedule) Process(req *req.Request) {
 	// s.manager = append(s.manager, req)
+
 	if !self.filter.Contains(req.URL + strconv.Itoa(req.Retry) + req.UpdateDate.Format("2001-01-01 01:01:01")) {
-		self.manager.Push(req)
+
+		if req.Retry < setting.Retry {
+			self.manager.Push(req)
+			log.Printf("[scheduler] queue request: %d, worker: %d", self.manager.Len(), self.WorkLen()-1)
+		}
 	}
-	if req.Seed {
-		self.Minus()
-	}
-	log.Printf("[scheduler] queue request: %d, worker: %d", self.manager.Len(), self.WorkLen())
+	self.Minus(req)
+
 }
 
 func New(downloader chan *req.Request) *Schedule {
@@ -62,9 +71,9 @@ func (self *Schedule) LoopDispatch() {
 	for {
 
 		if self.manager.Len() > 0 && self.WorkLen() < 20 {
-			self.Inc()
 			req := self.manager.Pop()
-			req.Seed = true
+			self.Inc(req)
+
 			self.downloader <- req
 		}
 	}

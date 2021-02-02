@@ -9,7 +9,7 @@ import (
 var db = New()
 
 func TestPgSQL_SelectExpired(t *testing.T) {
-
+	db.Conn.AddQueryHook(dbLogger{})
 	tests := []struct {
 		name string
 		self *PgSQL

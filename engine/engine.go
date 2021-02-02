@@ -69,8 +69,10 @@ func (e *Engine) RunForever(
 	scrape *scrape.Scrape,
 ) {
 	for {
+
 		select {
 		case req := <-e.scheduler:
+
 			schedule.Process(req)
 		case req := <-e.downloader:
 			go download.Process(req)

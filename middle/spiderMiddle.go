@@ -28,6 +28,7 @@ func (err ContentErrorMiddleware) NewContentError(msg string) ContentErrorMiddle
 func (err ContentErrorMiddleware) Hook(resp *response.Response) *response.Response {
 	if strings.Contains(resp.Page, err.Msg) {
 		resp.StatusCode = err.Code
+		resp.StatusMsg = err.Msg
 	}
 	return resp
 }

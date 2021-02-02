@@ -48,8 +48,8 @@ func (self *Pipeline) saveResponse(resp *response.Response) {
 }
 
 func (self *Pipeline) sendReq(r *req.Request) {
-	self.scheduler <- r
 	self.saveReq(r)
+	self.scheduler <- r
 }
 
 func (self *Pipeline) saveReq(req *req.Request) {
